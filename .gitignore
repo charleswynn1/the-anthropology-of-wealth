@@ -1,0 +1,30 @@
+# macOS
+.DS_Store
+
+# Secrets & auth tokens
+.env
+client_secrets.json
+token.pickle
+sheets_token.pickle
+
+# Dependencies
+node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Rendered output — keep folder, ignore contents
+out/*
+!out/.gitkeep
+
+# Public dir — symlinks only, keep folder, ignore contents
+public/*
+!public/.gitkeep
+
+# Projects — keep folder, ignore all content
+projects/*
+!projects/.gitkeep
+
+# Src — keep root files, ignore per-project subdirectories
+src/*/
