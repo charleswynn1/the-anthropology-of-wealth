@@ -6,6 +6,8 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **IMAGE COUNT RULE: Before writing image prompts in W2 (script writing), calculate the required number of images for each section based on the audio duration. Use the formula: ceil(section_duration_seconds / 7) images per section. Write that many image prompts in the script directly. Do NOT write a small set and discover the shortage at W8a — calculate first, write enough prompts upfront.**
 
+**IMAGE FILENAME RULE: Image filenames are deterministic and known at script-writing time (e.g., H01.png, AL17.png). Do NOT wait for W3b to finish before writing `visuals.tsx` and the Composition. Write them as soon as W4/W5a are done — the files will exist by the time the preview launches. Only `verify_timings.py` and `npm start` must wait for all images to be present.**
+
 **API CALL RULE: NEVER call the ElevenLabs or Gemini APIs more than once per file.** Audio and image generation scripts must only run once. If a file already exists, the scripts skip it automatically. Do NOT re-run generation scripts unless an API error occurred or the user explicitly asks to regenerate. These API calls cost money — treat every call as final.
 
 ## Pipeline Overview
@@ -283,15 +285,15 @@ export const setupVisuals = [S01, S02, ...];
 **W6a: Create `src/<project>/<Composition>.tsx`** *(depends on W5a AND W5b — wait for both)*
 
 Follow the exact pattern from `src/ten-dollar-day/TenDollarDay.tsx`:
+**NO FADES RULE: Images cut hard — no fade-in, no fade-out, no opacity transitions between visuals.**
+
 ```tsx
 import React from "react";
-import { AbsoluteFill, Sequence, Audio, staticFile, useCurrentFrame, interpolate } from "remotion";
+import { AbsoluteFill, Sequence, Audio, staticFile } from "remotion";
 import { hookVisuals, setupVisuals, /* ... */ } from "./visuals";
 import { VISUAL_TIMINGS } from "./timing";
 
-const FADE = 12;
 const A = "<project>/audio/";
-const clamp = { extrapolateLeft: "clamp" as const, extrapolateRight: "clamp" as const };
 
 const ALL_VISUALS = [hookVisuals, setupVisuals, /* ... all section arrays */];
 
@@ -307,15 +309,6 @@ const AUDIO_SECTIONS = [
   // For split sections: { file: "s3_data_pt2", start: SECTION_STARTS[2] + prev_dur, dur: N }
 ];
 
-const VisualFade: React.FC<{ Visual: React.FC; dur: number }> = ({ Visual, dur }) => {
-  const frame = useCurrentFrame();
-  const fadeIn = Math.min(FADE, Math.floor(dur / 4));
-  const fadeOut = Math.min(FADE, Math.floor(dur / 4));
-  const mid = Math.max(dur - fadeOut, fadeIn + 1);
-  const opacity = interpolate(frame, [0, fadeIn, mid, dur], [0, 1, 1, 0], clamp);
-  return <AbsoluteFill style={{ opacity }}><Visual /></AbsoluteFill>;
-};
-
 export const CompositionName: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: "#0d1117" }}>
     {ALL_VISUALS.map((visuals, secIdx) => {
@@ -325,7 +318,7 @@ export const CompositionName: React.FC = () => (
         const dur = timings[vIdx];
         const from = SECTION_STARTS[secIdx] + localOffset;
         localOffset += dur;
-        return <Sequence key={`vis-${secIdx}-${vIdx}`} from={from} durationInFrames={dur}><VisualFade Visual={Visual} dur={dur} /></Sequence>;
+        return <Sequence key={`vis-${secIdx}-${vIdx}`} from={from} durationInFrames={dur}><AbsoluteFill><Visual /></AbsoluteFill></Sequence>;
       });
     })}
     {AUDIO_SECTIONS.map(({ file, start, dur }, i) => (

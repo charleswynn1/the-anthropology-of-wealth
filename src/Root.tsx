@@ -3,7 +3,7 @@ import { TenDollarDay } from "./ten-dollar-day/TenDollarDay";
 import { HundredKTippingPoint } from "./hundred-k-tipping-point/HundredKTippingPoint";
 import { BudgetAtAnyIncome } from "./budget-at-any-income/BudgetAtAnyIncome";
 import { WhyMoneyFeelingTight } from "./why-money-feels-tight/WhyMoneyFeelingTight";
-import { OriginOfDebt } from "./origin-of-debt/OriginOfDebt";
+import { InventionOfTheCoin } from "./invention-of-the-coin/InventionOfTheCoin";
 
 export const RemotionRoot = () => {
   return (
@@ -41,9 +41,9 @@ export const RemotionRoot = () => {
         height={1080}
       />
       <Composition
-        id="OriginOfDebt"
-        component={OriginOfDebt}
-        durationInFrames={20962}
+        id="InventionOfTheCoin"
+        component={InventionOfTheCoin}
+        durationInFrames={40478}
         fps={30}
         width={1920}
         height={1080}

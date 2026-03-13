@@ -22,8 +22,8 @@ PRICING = {
     # Gemini 3 Flash Preview (text generation)
     "gemini_flash_input_per_1m_tokens": 0.50,
     "gemini_flash_output_per_1m_tokens": 3.00,
-    # Gemini 3 Pro Image / Nano Banana Pro (4K)
-    "gemini_image_4k_per_image": 0.24,
+    # Gemini 3.1 Flash Image Preview (4K output) — $0.151/image per Google pricing
+    "gemini_image_4k_per_image": 0.151,
     # ElevenLabs TTS (multilingual_v2, 1 credit = 1 char)
     "elevenlabs_tts_per_1k_chars": 0.30,
     # ElevenLabs Music (music_v1)
