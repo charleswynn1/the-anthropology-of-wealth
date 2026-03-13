@@ -33,7 +33,7 @@ SECTIONS = [
     ("athens",           [("s4_athens", 30)]),
     ("alexander",        [("s5_alexander", 29)]),
     ("rome",             [("s6_rome", 31)]),
-    ("modern",           [("s7_modern", 37)]),
+    ("modern",           [("s7_modern", 39)]),
     ("closing",          [("s8_closing", 22)]),
 ]
 

@@ -408,17 +408,18 @@ This is a manual, semantic review. Run the report tool to get a side-by-side vie
 python3 tools/verify_visual_sync.py <project>
 ```
 
-Then do the actual review:
+Then do the actual review using the report output — do not read `script.md` manually:
 
-1. Read the narration for each section in `script.md` from start to finish
-2. Read every image description in `generate_images.py`
-3. For each section, work through the narration chronologically and ask: at this moment in the narration, which image is showing, and does what that image depicts match what the narrator is saying?
-4. The narration timestamp is approximate — use word count and section duration to estimate. Each image shows for roughly `section_duration / image_count` seconds.
-5. Flag every mismatch: "narration is talking about X but the image shows Y"
-6. Fix by reordering the export array in `visuals.tsx` — move images to the position that matches their narration moment. Do NOT regenerate images to fix sync issues.
-7. Repeat for every section.
+1. Run `verify_visual_sync.py` and read its output section by section
+2. For each image entry, the report shows the exact words being spoken during that image (character-level if `.json` alignment files exist, estimated otherwise) alongside the image description
+3. Judge whether what the image shows matches what the narrator is saying at that moment
+4. Flag every mismatch: "narration is talking about X but the image shows Y"
+5. Fix by reordering the export array in `visuals.tsx` — move images to the position that matches their narration moment. Do NOT regenerate images to fix sync issues.
+6. Re-run `verify_visual_sync.py` after edits to confirm the fix
 
-This cannot be automated. It requires reading comprehension of both the narration and the image descriptions and reasoning about whether they belong together. Do not skip it or summarize it. Go section by section, image by image.
+This cannot be automated. The report gives you the raw material — the judgment of whether image and narration belong together is yours to make. Do not skip it or summarize it. Go section by section, image by image.
+
+If there are narration moments with no suitable image — sections where the words describe something not depicted by any available image — flag those specifically and generate additional images to cover them. Do not reorder your way out of a content gap. If the narration needs an image that doesn't exist, add it.
 
 **Do not launch the preview until every section has been reviewed and all mismatches fixed.**
 
