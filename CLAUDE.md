@@ -84,6 +84,10 @@ Read `research.md` in the project root. It contains all three research prompts. 
 
 Every number in the script must be grounded in reality. Do not guess.
 
+```bash
+python3 tools/notify.py research <project>
+```
+
 ---
 
 ### WAVE 2 — Script (sequential, depends on W1c)
@@ -170,6 +174,10 @@ The test: is the sentence doing rhetorical work (setting up a contrast for effec
 
 Do not start Wave 3 until W2c is complete and clean.
 
+```bash
+python3 tools/notify.py script <project>
+```
+
 ---
 
 ### WAVE 3 — Audio + Music (W3a and W3c run in parallel; W3b and W3d wait until after W4)
@@ -253,6 +261,10 @@ Edit `tools/generate_images.py`:
 python3 tools/generate_images.py
 ```
 Outputs PNGs to `projects/<project>/images/`. Verify all files were created.
+
+```bash
+python3 tools/notify.py images <project>
+```
 
 **As soon as W3b finishes → immediately start W5b.**
 
@@ -440,6 +452,11 @@ If there are narration moments with no suitable image — sections where the wor
 ```bash
 cd /Users/charleswynn/Desktop/The Anthropology of Wealth && npm start
 ```
+
+```bash
+python3 tools/notify.py remotion <project>
+```
+
 **STOP HERE.** Tell the user the video is ready for preview. Do NOT render unless the user explicitly says to.
 
 ---
