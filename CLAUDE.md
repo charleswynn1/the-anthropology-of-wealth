@@ -4,6 +4,8 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **MEMORY RULE: Never use the memory system. If a rule or preference needs to be remembered, add it to this CLAUDE.md file instead.**
 
+**IMAGE COUNT RULE: Before writing image prompts in W2 (script writing), calculate the required number of images for each section based on the audio duration. Use the formula: ceil(section_duration_seconds / 7) images per section. Write that many image prompts in the script directly. Do NOT write a small set and discover the shortage at W8a — calculate first, write enough prompts upfront.**
+
 **API CALL RULE: NEVER call the ElevenLabs or Gemini APIs more than once per file.** Audio and image generation scripts must only run once. If a file already exists, the scripts skip it automatically. Do NOT re-run generation scripts unless an API error occurred or the user explicitly asks to regenerate. These API calls cost money — treat every call as final.
 
 ## Pipeline Overview

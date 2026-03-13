@@ -31,15 +31,16 @@ client = ElevenLabs(api_key=API_KEY)
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "origin-of-debt"  # Folder name under projects/
+PROJECT_NAME = "invention-of-the-coin"  # Folder name under projects/
 
 MUSIC_PROMPT = (
-    "Ancient-modern fusion instrumental: deep resonant bass tones over slow ceremonial "
-    "percussion, sparse minor-key piano or Rhodes weaving through, subtle vinyl warmth "
-    "and distant echo. The mood is contemplative and weighty, carrying the gravity of "
-    "history without being oppressive. Feels like standing at a crossroads between "
-    "ancient clay tablets and a modern city at dusk. Steady 85 to 90 BPM. No vocals. "
-    "Cinematic and atmospheric, suitable for documentary narration."
+    "Ancient-modern fusion instrumental: deep resonant bass drones and slow ceremonial "
+    "percussion, sparse minor-key piano notes dropping like stones in still water, subtle "
+    "metallic ringing tones that suggest coins and forge-fire, distant strings carrying "
+    "unresolved tension. The mood is investigative and weighty, like uncovering something "
+    "old and still dangerous. Feels like standing in a 2,600-year-old mint and realizing "
+    "the machinery is still running. Steady 75 to 85 BPM. No vocals. Cinematic and "
+    "atmospheric, suitable for historical documentary narration about hidden power systems."
 )
 
 MUSIC_LENGTH_MS = 300000  # 5 minutes (300,000 ms)
