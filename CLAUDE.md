@@ -4,9 +4,11 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **MEMORY RULE: Never use the memory system. If a rule or preference needs to be remembered, add it to this CLAUDE.md file instead.**
 
-**IMAGE COUNT RULE: Before writing image prompts in W2 (script writing), calculate the required number of images for each section based on the audio duration. Use the formula: ceil(section_duration_seconds / 7) images per section. Write that many image prompts in the script directly. Do NOT write a small set and discover the shortage at W8a — calculate first, write enough prompts upfront.**
+**VISUAL SYNC RULE: Images must match the narration playing beneath them. Do NOT assign one audio file per section and distribute images evenly — that guarantees mismatches. Instead, split each section's narration into clips at every visual topic change. Each clip is its own audio file (e.g., `s7_potosi`, `s7_seigniorage`, `s7_loans`) and gets its own image set. Images are only distributed evenly within a single clip, so they stay locked to the right words. A "visual topic change" is any moment where the scene, subject, time period, or concept shifts enough that the current images would look wrong.**
 
-**IMAGE FILENAME RULE: Image filenames are deterministic and known at script-writing time (e.g., H01.png, AL17.png). Do NOT wait for W3b to finish before writing `visuals.tsx` and the Composition. Write them as soon as W4/W5a are done — the files will exist by the time the preview launches. Only `verify_timings.py` and `npm start` must wait for all images to be present.**
+**IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 7). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
+
+**IMAGE FILENAME RULE: Image filenames are deterministic and known after W4 (e.g., H01.png, AL17.png). Write `visuals.tsx` and the Composition as soon as W4/W5a are done — the files will exist by the time the preview launches. Only `verify_timings.py` and `npm start` must wait for all images to be present.**
 
 **DATE FORMAT RULE: Never write BC, AD, BCE, or CE in narration. For ancient dates, write the full phrase: "630 BC" → "six hundred thirty years before Christ", "300 AD" → "three hundred years after Christ's death". For years from roughly 1000 AD onward, just say the year naturally with no era suffix: "1600" → "sixteen hundred", "1776" → "seventeen seventy six", "2008" → "two thousand eight".**
 
@@ -16,19 +18,25 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 ```
          W1a name → W1b dirs → W1c research (Ph1→Ph2→Ph3) → W2 script → W2b check_script.py → W2c qualitative review
                                                                     │
-                              ┌─────────────────────────────────────┼──────────────────────┐
-                              ▼                                     ▼                      ▼
-                         W3a audio                            W3b images            W3c music*
-                              │                                     │                      │
-                              ▼                                     │               (done async)
-                         W4 timings                                 │
-                              │                                     ▼
-                         W5a timing.ts ──────────────────► W5b visuals.tsx
-                                                                    │
-                                                           W6a Composition.tsx ◄── W3d thumbnails
-                                                           W6b save scripts  (parallel with W6a)
-                                                                    │
-                                                            W7 Root.tsx → W8a verify → W8b preview ⏸
+                                                    ┌───────────────┴──────────────┐
+                                                    ▼                              ▼
+                                               W3a audio                     W3c music*
+                                                    │                         (async)
+                                                    ▼
+                                               W4 timings  ← exact durations known here
+                                                    │
+                              ┌─────────────────────┴──────────────────────┐
+                              ▼                                             ▼
+                         W5a timing.ts                               W3b images  ← generated NOW with real counts
+                              │                                             │
+                              └──────────────────┬──────────────────────────┘
+                                                 ▼
+                                          W5b visuals.tsx
+                                                 │
+                                        W6a Composition.tsx ◄── W3d thumbnails
+                                        W6b save scripts  (parallel with W6a)
+                                                 │
+                                          W7 Root.tsx → W8a verify → W8b preview ⏸
 ```
 *Music (W3c) starts after Research Phase 3 — does not wait for the full script.
 
@@ -155,9 +163,9 @@ Do not start Wave 3 until W2c is complete and clean.
 
 ---
 
-### WAVE 3 — Parallel Generation (W3a, W3b, W3c, W3d all run simultaneously)
+### WAVE 3 — Audio + Music (W3a and W3c run in parallel; W3b and W3d wait until after W4)
 
-**Start all four tracks at once as soon as W2 is complete. Do not run them sequentially.**
+**W3b (images) and W3d (thumbnails) do NOT start here. Only audio and music run in Wave 3.**
 
 ---
 
@@ -166,29 +174,14 @@ Do not start Wave 3 until W2c is complete and clean.
 Edit `tools/generate_audio.py`:
 - Set `PROJECT_NAME = "<project>"`
 - Replace `SECTIONS` with narration tuples from the script: `("s1_hook", """text...""")`
-- Split long sections into parts for visual sync (e.g., `s3_data_pt1`, `s3_data_pt2`)
+- **Split at every visual topic change** — any shift in scene, subject, time period, or concept gets its own audio file (e.g., `s7_potosi`, `s7_seigniorage`, `s7_loans`, `s7_milled_edges`). Never lump unrelated visuals under one audio file. The clip boundary is what keeps images in sync with words.
 
 ```bash
 python3 tools/generate_audio.py
 ```
 Outputs MP3s to `projects/<project>/audio/`. Verify all files were created.
 
-**As soon as W3a finishes → immediately start W4 (do not wait for W3b, W3c, or W3d).**
-
----
-
-**W3b: Generate images** *(depends on W2 — needs image prompts)*
-
-Edit `tools/generate_images.py`:
-- Set `PROJECT_NAME = "<project>"`
-- Replace `IMAGES` with the image prompt tuples from the script
-
-```bash
-python3 tools/generate_images.py
-```
-Outputs PNGs to `projects/<project>/images/`. Uses round-robin API keys with 15s batch delays. Verify all files were created.
-
-**As soon as W3b finishes → immediately start W5b (do not wait for W4 or W5a).**
+**As soon as W3a finishes → immediately start W4.**
 
 ---
 
@@ -205,41 +198,64 @@ Outputs `music_bg.mp3` to `projects/<project>/audio/`. Runs in parallel — does
 
 ---
 
-**W3d: Generate thumbnails** *(depends on W2 — needs THUMBNAIL TEXT and [THUMBNAIL] block from script.md)*
+### WAVE 4 — Timings (starts when W3a finishes)
 
-```bash
-python3 tools/generate_thumbnail.py <project>
-```
-Outputs 3 thumbnail variations to `projects/<project>/`. Runs in parallel — does not block any other track.
+**W4: Calculate timings** *(depends on W3a — reads actual MP3 durations from ElevenLabs output)*
 
-**Before running:** Verify script.md contains a `[THUMBNAIL]` block with 3 `scenes:` entries. These scenes drive what the character is doing and what surrounds them — they must visually reflect the video topic, not generic poses. If missing, add it before generating.
+This is the source of truth for all image counts. Do not use estimates. Do not use word count. Use only the real file durations measured here.
 
-**Thumbnail text rule:** Thumbnail text must come from the THUMBNAIL TEXT options in `script.md` — never the YouTube channel name, never a generic placeholder, never the video title. The text must reflect the specific project content (e.g., "FREEDOM = DEBT GONE", "THE OLDEST TRAP →"). If you see "Money Math" or "The math behind the money" in thumbnail output, that means `generate_thumbnail.py` failed to read `script.md` and fell through to its defaults. Stop and fix the regex before proceeding.
-
----
-
-### WAVE 4 — Timings (starts when W3a finishes, independent of W3b/W3c/W3d)
-
-**W4: Calculate timings** *(depends on W3a — reads actual MP3 durations)*
-
-Edit `tools/calculate_timings.py`:
-- Set `PROJECT_NAME = "<project>"`
-- Update `SECTIONS` to map each audio file to its visual count:
+Run `calculate_timings.py` with placeholder image counts first to get actual durations:
 ```python
 SECTIONS = [
-    ("hook",     [("s1_hook", 5)]),
-    ("setup",    [("s2_setup", 5)]),
-    ("data",     [("s3_data_pt1", 4), ("s3_data_pt2", 4)]),
-    # ... match your actual audio files and image counts
+    ("hook",     [("s1_hook", 1)]),       # placeholder count — will update
+    ("setup",    [("s2_setup", 1)]),
+    # ... one entry per audio clip
 ]
 ```
 
 ```bash
 python3 tools/calculate_timings.py
 ```
-Capture the VISUAL_TIMINGS array, AUDIO_SECTIONS config, and TOTAL_FRAMES from the output.
 
-**As soon as W4 finishes → immediately start W5a.**
+Read the actual seconds per clip from the output. Then compute final image count for each clip: `ceil(actual_seconds / 7)`. Update `SECTIONS` with the real counts and re-run:
+
+```bash
+python3 tools/calculate_timings.py
+```
+
+Capture the final VISUAL_TIMINGS array, AUDIO_SECTIONS config, and TOTAL_FRAMES.
+
+**As soon as W4 finishes → immediately start W3b and W5a in parallel.**
+
+---
+
+**W3b: Generate images** *(depends on W4 — image counts come from actual audio durations)*
+
+Now that exact clip durations are known, write the image prompts into `generate_images.py`. Each clip's images must depict only what that clip's narration describes — not other parts of the video.
+
+Edit `tools/generate_images.py`:
+- Set `PROJECT_NAME = "<project>"`
+- Replace `IMAGES` with image prompt tuples grouped by clip. The number of prompts per clip = the count computed in W4. Image filenames follow the clip prefix convention (e.g., clip `s3_lydia` → `L01.png`, `L02.png`, ...).
+
+```bash
+python3 tools/generate_images.py
+```
+Outputs PNGs to `projects/<project>/images/`. Verify all files were created.
+
+**As soon as W3b finishes → immediately start W5b.**
+
+---
+
+**W3d: Generate thumbnails** *(runs in parallel with W3b — depends on W4 being done so script is finalized)*
+
+```bash
+python3 tools/generate_thumbnail.py <project>
+```
+Outputs 3 thumbnail variations to `projects/<project>/`. Does not block any other track.
+
+**Before running:** Verify script.md contains a `[THUMBNAIL]` block with 3 `scenes:` entries. These scenes must visually reflect the video topic. If missing, add it before generating.
+
+**Thumbnail text rule:** Text must come from the THUMBNAIL TEXT options in `script.md` — never the channel name, never a generic placeholder. If you see "Money Math" or "The math behind the money", the script regex failed — fix it before proceeding.
 
 ---
 
@@ -257,7 +273,7 @@ export const VISUAL_TIMINGS: number[][] = [
 
 ---
 
-**W5b: Create `src/<project>/visuals.tsx`** *(depends on W3b — starts as soon as images exist, independent of W4/W5a)*
+**W5b: Create `src/<project>/visuals.tsx`** *(depends on W3b — starts as soon as images are generated)*
 
 Create one component per generated image, one export array per section:
 ```tsx
