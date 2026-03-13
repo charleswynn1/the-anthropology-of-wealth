@@ -276,27 +276,7 @@ def upload_video(video_path, title, description, schedule_time=None,
     print(f"Video ID: {video_id}")
     print(f"URL: https://youtube.com/watch?v={video_id}")
 
-    # Add to playlist
-    if skip_playlist:
-        print("Skipping playlist (--no-playlist)")
-    else:
-        try:
-            playlist_id = get_or_create_playlist(youtube)
-            youtube.playlistItems().insert(
-                part="snippet",
-                body={
-                    "snippet": {
-                        "playlistId": playlist_id,
-                        "resourceId": {
-                            "kind": "youtube#video",
-                            "videoId": video_id,
-                        },
-                    },
-                },
-            ).execute()
-            print(f"Added to playlist")
-        except Exception as e:
-            print(f"WARNING: Could not add to playlist: {e}")
+    # Playlist disabled
 
     # Thumbnail
     if not skip_thumbnail:
