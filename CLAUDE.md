@@ -401,7 +401,20 @@ Checks that `timing.ts` is correct before launching the preview:
 
 **If errors (frame drift > 1s):** re-run `calculate_timings.py` and update `timing.ts` before proceeding.
 
-**W8b: Launch preview**
+**W8b: Visual sync check**
+```bash
+python3 tools/verify_visual_sync.py <project>
+```
+This generates a timestamped report showing, for every image in the video:
+- The timestamp it appears
+- The image's description (what it shows)
+- The approximate narration playing at that moment
+
+**Read the full report.** For each image, verify that what the image shows matches what the narration is saying at that time. If they don't match, reorder the affected section's export array in `visuals.tsx` and re-run until clean.
+
+This is a required step. Do not launch the preview until every section passes the visual sync review.
+
+**W8c: Launch preview**
 ```bash
 cd /Users/charleswynn/Desktop/The Anthropology of Wealth && npm start
 ```
