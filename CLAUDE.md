@@ -401,18 +401,26 @@ Checks that `timing.ts` is correct before launching the preview:
 
 **If errors (frame drift > 1s):** re-run `calculate_timings.py` and update `timing.ts` before proceeding.
 
-**W8b: Visual sync check**
+**W8b: Visual sync review (qualitative — must be done by Claude, not a script)**
+
+This is a manual, semantic review. Run the report tool to get a side-by-side view:
 ```bash
 python3 tools/verify_visual_sync.py <project>
 ```
-This generates a timestamped report showing, for every image in the video:
-- The timestamp it appears
-- The image's description (what it shows)
-- The approximate narration playing at that moment
 
-**Read the full report.** For each image, verify that what the image shows matches what the narration is saying at that time. If they don't match, reorder the affected section's export array in `visuals.tsx` and re-run until clean.
+Then do the actual review:
 
-This is a required step. Do not launch the preview until every section passes the visual sync review.
+1. Read the narration for each section in `script.md` from start to finish
+2. Read every image description in `generate_images.py`
+3. For each section, work through the narration chronologically and ask: at this moment in the narration, which image is showing, and does what that image depicts match what the narrator is saying?
+4. The narration timestamp is approximate — use word count and section duration to estimate. Each image shows for roughly `section_duration / image_count` seconds.
+5. Flag every mismatch: "narration is talking about X but the image shows Y"
+6. Fix by reordering the export array in `visuals.tsx` — move images to the position that matches their narration moment. Do NOT regenerate images to fix sync issues.
+7. Repeat for every section.
+
+This cannot be automated. It requires reading comprehension of both the narration and the image descriptions and reasoning about whether they belong together. Do not skip it or summarize it. Go section by section, image by image.
+
+**Do not launch the preview until every section has been reviewed and all mismatches fixed.**
 
 **W8c: Launch preview**
 ```bash
