@@ -354,6 +354,7 @@ def generate_image(name, prompt, api_key):
             config=types.GenerateContentConfig(
                 response_modalities=["IMAGE", "TEXT"],
                 temperature=0.7,
+                tools=[types.Tool(google_search=types.GoogleSearch())],
                 image_config=types.ImageConfig(
                     image_size="4K",
                     aspect_ratio="16:9",
