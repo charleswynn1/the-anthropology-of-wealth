@@ -8,7 +8,6 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 7). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
 
-**IMAGE FILENAME RULE: Image filenames are deterministic and known after W4 (e.g., H01.png, AL17.png). Write `visuals.tsx` and the Composition as soon as W4/W5a are done — the files will exist by the time the preview launches. Only `verify_timings.py` and `npm start` must wait for all images to be present.**
 
 **DATE FORMAT RULE: Never write BC, AD, BCE, or CE in narration. For ancient dates, write the full phrase: "630 BC" → "six hundred thirty years before Christ", "300 AD" → "three hundred years after Christ's death". For years from roughly 1000 AD onward, just say the year naturally with no era suffix: "1600" → "sixteen hundred", "1776" → "seventeen seventy six", "2008" → "two thousand eight".**
 
@@ -235,7 +234,7 @@ Now that exact clip durations are known, write the image prompts into `generate_
 
 Edit `tools/generate_images.py`:
 - Set `PROJECT_NAME = "<project>"`
-- Replace `IMAGES` with image prompt tuples grouped by clip. The number of prompts per clip = the count computed in W4. Image filenames follow the clip prefix convention (e.g., clip `s3_lydia` → `L01.png`, `L02.png`, ...).
+- Replace `IMAGES` with image prompt tuples grouped by clip. The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
 
 ```bash
 python3 tools/generate_images.py
