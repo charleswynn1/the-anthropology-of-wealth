@@ -87,10 +87,9 @@ Generates 3 YouTube thumbnail variations using Gemini with the reference charact
 - **Model**: `gemini-3.1-flash-image-preview` (fallback: `gemini-3-pro-image-preview`)
 - **Reference image**: Sends `reference/character.png` as multimodal input
 - **Output**: `projects/<project>/thumbnail-{1,2,3}.png` (4K, 16:9)
-- **Text selection**: Picks 3 different hook texts from THUMBNAIL TEXT, prioritizing reversals, hidden-truth reveals, and ironic contrasts over plain descriptive titles or math-style hooks
-- **Scene direction**: Each variation uses the corresponding `scenes:` entry from the `[THUMBNAIL]` block — this defines the character's clothing, action, expression, and surroundings. All four must reflect the video topic.
+- **Design**: Load the `/youtube-thumbnails` skill before writing the `[THUMBNAIL]` block. The skill's 6-step process drives all text selection, scene direction, character expression, and composition decisions. Do not write scenes without it.
 - **Character dress**: Specified per scene. Clothing must be appropriate to the historical period or context of the video — ancient robes for ancient history, period dress for historical topics, modern clothes for contemporary topics. Never defaults to grey suit unless the topic is explicitly modern/corporate.
-- **Rules**: Character appearance and setting must visually reflect the video topic. Hook text is a revelation hook, NOT the video title. Character expression must be documentary-weight: knowing, grave, or quietly intense — never shocked or hype-reactive. No charts, arrows, math equations, or floating icons beyond what the scene requires.
+- **Rules**: No charts, arrows, math equations, or floating icons beyond what the scene requires.
 - **Cost**: $0.24 per image ($0.72 total for 3 thumbnails)
 
 ---

@@ -103,7 +103,7 @@ The output must include:
 5. 3 alternate intros
 
 Also include:
-- TITLE (5 options)
+- TITLE (5 options — load the `/youtube-titles` skill and follow its process before writing these)
 - THUMBNAIL TEXT (3-5 options)
 - CORE IDEA
 - KEY MONEY LESSON
@@ -258,12 +258,12 @@ Outputs PNGs to `projects/<project>/images/`. Verify all files were created.
 
 **W3d: Generate thumbnails** *(runs in parallel with W3b — depends on W4 being done so script is finalized)*
 
+**Before running:** Load the `/youtube-thumbnails` skill and follow its full 6-step design process to create the `[THUMBNAIL]` block in `script.md`. The skill ensures every thumbnail makes a promise rather than describing the video, executes on 2-3 psychological constants (Curiosity, Contrast, Emotion, Conflict, Reward), and uses varied emotions and compositions across the 3 variations. Do not write the `[THUMBNAIL]` block without the skill.
+
 ```bash
 python3 tools/generate_thumbnail.py <project>
 ```
 Outputs 3 thumbnail variations to `projects/<project>/`. Does not block any other track.
-
-**Before running:** Verify script.md contains a `[THUMBNAIL]` block with 3 `scenes:` entries. These scenes must visually reflect the video topic. If missing, add it before generating.
 
 **Thumbnail text rule:** Text must come from the THUMBNAIL TEXT options in `script.md` — never the channel name, never a generic placeholder. If you see "Money Math" or "The math behind the money", the script regex failed — fix it before proceeding.
 

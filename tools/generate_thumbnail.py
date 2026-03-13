@@ -255,7 +255,7 @@ def build_variation_prompts(
             f"- The hook text must be large, bold, and legible — placed to complement the composition\n"
             f"- No charts, no graphs, no floating icons, no captions, no watermarks\n"
             f"- No extra text beyond the hook text above\n"
-            f"- Documentary-weight expression: knowing, grave, or quietly intense — never shocked or hype-reactive\n\n"
+            f"- Character expression must match the scene description exactly — do not override with a default expression\n\n"
             f"{THUMB_STYLE}"
         )
         prompts.append(prompt)
