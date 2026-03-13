@@ -6,3 +6,4 @@
 | 2026-03-11 | hundred-k-tipping-point | Why Everything Changes After You Save $100,000 | https://youtube.com/watch?v=IRuB6sF6b4U |
 | 2026-03-12 | origin-of-debt | Babylon Had Better Debt Laws Than America | https://youtube.com/watch?v=8fVV6ASp75Y |
 | 2026-03-13 | invention-of-the-coin | Money Was Rigged From the Start | https://youtube.com/watch?v=Intl0dgH4aY |
+| 2026-03-13 | gold-became-money | 118 Elements. Gold Won. Here's Why. | https://youtube.com/watch?v=83HR6h723Sw |

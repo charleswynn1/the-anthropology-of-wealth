@@ -35,12 +35,6 @@ SCHEDULE_GAP_DAYS = 2
 
 DESCRIPTION_TEMPLATE = """{description}
 
-💰 Money Math breaks down the money side of everyday life — so the numbers finally make sense.
-
-No lectures. No jargon. Just real math, real scenarios, and real lessons you can use today.
-
-Subscribe and turn on notifications so you never miss an episode.
-
 {tags_block}"""
 
 
