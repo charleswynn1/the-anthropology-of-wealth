@@ -31,15 +31,12 @@ def parse_visual_timings(project: str) -> list[list[int]]:
 def parse_visuals_order(project: str) -> dict[str, list[str]]:
     visuals_file = ROOT / f"src/{project}/visuals.tsx"
     content = visuals_file.read_text()
-    section_names = [
-        "hookVisuals", "setupVisuals", "lydiaVisuals", "athensVisuals",
-        "alexanderVisuals", "romeVisuals", "modernVisuals", "closingVisuals",
-    ]
+    # Dynamically find all exported visual arrays (any name ending in Visuals)
+    section_names = re.findall(r"export const (\w+Visuals)\s*=", content)
     result = {}
     for name in section_names:
         m = re.search(rf"export const {name}\s*=\s*\[(.*?)\];", content, re.DOTALL)
         if m:
-            # Strip // comments before scanning for image IDs to avoid false positives
             array_content = re.sub(r"//[^\n]*", "", m.group(1))
             result[name] = re.findall(r"\b([A-Z]+\d+)\b", array_content)
     return result
@@ -120,16 +117,35 @@ def fmt_time(seconds: float) -> str:
     return f"{m}:{s:05.2f}"
 
 
-SECTION_KEYS = [
-    ("hookVisuals",     "s1_hook",      "hook"),
-    ("setupVisuals",    "s2_setup",     "setup"),
-    ("lydiaVisuals",    "s3_lydia",     "lydia"),
-    ("athensVisuals",   "s4_athens",    "athens"),
-    ("alexanderVisuals","s5_alexander", "alexander"),
-    ("romeVisuals",     "s6_rome",      "rome"),
-    ("modernVisuals",   "s7_modern",    "modern"),
-    ("closingVisuals",  "s8_closing",   "closing"),
-]
+def get_section_keys(project: str) -> list[tuple[str, str, str]]:
+    """Read section keys from project's calculate_timings.py and visuals.tsx."""
+    calc_file = ROOT / f"projects/{project}/calculate_timings.py"
+    if not calc_file.exists():
+        calc_file = ROOT / "tools/calculate_timings.py"
+    content = calc_file.read_text()
+    # Parse SECTIONS = [("label", [("audio_file", N), ...]), ...]
+    sections_match = re.search(r"SECTIONS\s*=\s*\[(.*?)\]\s*\n", content, re.DOTALL)
+    if not sections_match:
+        # fallback hardcoded list
+        return [
+            ("hookVisuals","s1_hook","hook"),("setupVisuals","s2_setup","setup"),
+            ("lydiaVisuals","s3_lydia","lydia"),("athensVisuals","s4_athens","athens"),
+            ("alexanderVisuals","s5_alexander","alexander"),("romeVisuals","s6_rome","rome"),
+            ("modernVisuals","s7_modern","modern"),("closingVisuals","s8_closing","closing"),
+        ]
+    raw = sections_match.group(1)
+    section_labels = re.findall(r'\("([^"]+)",\s*\[', raw)
+    audio_files_per_section = [re.findall(r'\("([^"]+)",\s*\d+\)', blk)
+                                for blk in re.split(r'\("([^"]+)",\s*\[', raw)[2::2]]
+    visuals_file = ROOT / f"src/{project}/visuals.tsx"
+    vis_content = visuals_file.read_text()
+    vis_exports = re.findall(r"export const (\w+Visuals)\s*=", vis_content)
+    result = []
+    for i, label in enumerate(section_labels):
+        vis_name = vis_exports[i] if i < len(vis_exports) else f"{label}Visuals"
+        audio = audio_files_per_section[i][0] if i < len(audio_files_per_section) and audio_files_per_section[i] else f"s{i+1}_{label}"
+        result.append((vis_name, audio, label))
+    return result
 
 
 def main():
@@ -162,12 +178,8 @@ def main():
 
     all_ok = True
 
-    # Map section index to audio filename (nar_key → audio file stem)
-    audio_file_map = {
-        "s1_hook": "s1_hook", "s2_setup": "s2_setup", "s3_lydia": "s3_lydia",
-        "s4_athens": "s4_athens", "s5_alexander": "s5_alexander",
-        "s6_rome": "s6_rome", "s7_modern": "s7_modern", "s8_closing": "s8_closing",
-    }
+    SECTION_KEYS = get_section_keys(project)
+    audio_file_map = {nar_key: nar_key for _, nar_key, _ in SECTION_KEYS}
 
     for sec_idx, (vis_key, nar_key, label) in enumerate(SECTION_KEYS):
         images     = visuals.get(vis_key, [])

@@ -11,6 +11,7 @@ The core structure for every image prompt:
 ```json
 {
   "image_description": {
+    "ref_characters": ["joseph"],
     "metadata": {
       "art_style": "Boondocks-style animation, graphic novel illustration",
       "setting": "Description of location and time period",
@@ -67,11 +68,12 @@ The core structure for every image prompt:
 
 ### Field-by-Field Guide
 
+- **ref_characters** — Array of character reference keys that controls which reference images are sent to Gemini for this image. Valid values: `"joseph"` (main male — required in most/all images), `"jess"` (main female — add when scene has a woman), `"sola"` (girl child — add when scene has a girl), `"brayden"` (boy child — add when scene has a boy). Use all four only for explicit family scenes. This array is also used as the second element in the IMAGES 3-tuple in `generate_images.py`.
 - **metadata.art_style** — Always starts with "Boondocks-style animation" (this is the only valid starting phrase). Additional descriptors follow after a comma (e.g., "Boondocks-style animation, graphic novel illustration"). NEVER use "photorealistic", "photography style", "documentary photography", or "macro photography". These photography terms override the animation instruction and produce hyper-realistic images.
 - **metadata.setting** — Specific location and era. Examples: "Vintage bank interior, late 19th century", "Potosi silver mine entrance, 1590", "Modern suburban kitchen, present day". Vague settings produce vague images.
 - **metadata.mood** — The emotional register of the scene: "Serious, dramatic, transactional", "Tense, claustrophobic", "Hopeful, warm". Drives character expressions and lighting choices.
 - **metadata.color_palette** — 3-5 dominant colors. Drives visual consistency across the scene. Choose colors that support the mood and setting.
-- **main_characters[].appearance.clothing** — MUST be period/scene-specific. Never leave undefined. A character in 1590 Potosi wears rough Andean clothing. A character in a modern bank wears a contemporary suit. A character in ancient Mesopotamia wears a linen tunic. Undefined clothing defaults to something inconsistent with the scene.
+- **main_characters[].appearance.clothing** — MUST be period/scene-specific. Never leave undefined. A character in 1590 Potosi wears rough Andean clothing. A character in a modern bank wears a contemporary suit. A character in ancient Mesopotamia wears a linen tunic. Undefined clothing defaults to something inconsistent with the scene. **Wedding ring rule:** Joseph always wears a simple gold wedding band on his left ring finger; Jess always wears a modest diamond engagement ring on her left ring finger. The rings are subtle and understated — not shiny, not sparkling, not a focal point. Include in the clothing field for both characters.
 - **main_characters[].actions** — Array of 2-3 specific physical actions. Not vague ("standing there") but precise ("Handing a document to the teller with his right hand", "Leaning forward over the counter examining a ledger").
 - **key_objects[].visible_text** — Any text that should appear rendered in the image (document titles, signs, labels, amounts on checks). Gemini 3.1 Flash excels at text rendering when explicitly requested.
 - **environment_details.lighting** — Array of specific light sources. Not "well lit" but "Wall-mounted brass gas-style lamps with glass shades emitting warm light". Lighting drives the entire mood of the image.
@@ -84,39 +86,45 @@ The core structure for every image prompt:
 
 ## Reference Image Integration
 
-How reference images are sent alongside the JSON prompt in the pipeline:
+How reference images are sent alongside the JSON prompt in the pipeline. The `ref_characters` array in each prompt determines which character references to attach.
 
 **Python (current pipeline):**
 ```python
 import json
 
-contents = [
-    types.Part.from_bytes(data=REF_IMAGE_BYTES, mime_type=REF_MIME),
-    f"Using the attached image as a character reference, generate this scene in the EXACT same art style (Boondocks-style animation, bold linework, flat cel-shading). The character in every image must look like the man in the reference. Scene: {json.dumps(prompt_json)}"
-]
+# characters = ["joseph", "jess"]  — from the IMAGES 3-tuple
+contents = []
+for char in characters:
+    if char in REF_IMAGES:
+        contents.append(types.Part.from_bytes(
+            data=REF_IMAGES[char]["bytes"],
+            mime_type=REF_IMAGES[char]["mime"],
+        ))
+ref_desc = ", ".join(_CHARACTER_LABELS[c] for c in characters)
+contents.append(
+    f"Using the attached images as character references ({ref_desc}), "
+    f"generate this scene in the EXACT same art style (Boondocks-style animation, "
+    f"bold linework, flat cel-shading). Each character must look like their reference. "
+    f"Scene: {json.dumps(prompt_json)}"
+)
 ```
 
-**REST equivalent:**
-```json
-{
-  "contents": [{
-    "parts": [
-      {"inline_data": {"mime_type": "image/png", "data": "<BASE64_REF_IMAGE>"}},
-      {"text": "Using the attached image as a character reference, generate this scene in the EXACT same art style (Boondocks-style animation, bold linework, flat cel-shading). The character in every image must look like the man in the reference. Scene: {JSON}"}
-    ]
-  }],
-  "generationConfig": {
-    "responseModalities": ["IMAGE", "TEXT"],
-    "temperature": 0.7,
-    "imageConfig": {"imageSize": "4K", "aspectRatio": "16:9"}
-  }
-}
+**IMAGES tuple format:**
+```python
+# 3-tuple: (image_name, ref_characters_list, json_prompt)
+("H01", ["joseph"],          json.dumps({...})),  # Joseph only
+("H02", ["joseph", "jess"],  json.dumps({...})),  # Joseph + Jess (woman in scene)
+("H03", ["joseph", "sola"],  json.dumps({...})),  # Joseph + girl child
+("H04", ["joseph", "jess", "sola", "brayden"], json.dumps({...})),  # Family scene
 ```
 
 **Rules for reference images:**
-- The project's character reference (`reference/character.png`) is ALWAYS included as the first content part
+- Joseph (`reference/joseph.png`) is included in most/all images as the primary character reference
+- Jess (`reference/jessw.png`) is added when the scene has a woman or female figure
+- Sola (`reference/solaw.png`) is added when the scene has a girl child
+- Brayden (`reference/braydenw.png`) is added when the scene has a boy child
+- All four together ONLY for explicit family scenes
 - Up to 14 reference images total (10 objects + 4 characters for Gemini 3.1 Flash)
-- Additional reference images can be included for specific objects, settings, or style references that need high-fidelity reproduction
 - Each reference image is a separate `inline_data` part before the text prompt
 - MIME type must match the actual image format (image/png, image/jpeg, image/webp)
 
@@ -149,10 +157,17 @@ These produce hyper-realistic output that breaks the animation style:
 
 ## Character Presence Rules
 
-- The reference character MUST appear in every image — no objects-only shots
-- His role in `main_characters` specifies position, clothing, expression, and actions for THIS specific scene
-- Clothing is NEVER generic or fixed — it matches the historical period, setting, and cultural context of the scene
-- Character prominence depends on scene type:
+The project has four reference characters. The `ref_characters` array in each prompt controls which references are sent to Gemini.
+
+- **Joseph** (`reference/joseph.png`) — Main male character. MUST appear in most or all images. He is the visual anchor of the video. Always wears a simple gold wedding band on his left ring finger (subtle, not shiny or a focal point).
+- **Jess** (`reference/jessw.png`) — Main female character. Add her whenever a scene involves a woman or female figure, in addition to Joseph. Always wears a modest diamond engagement ring on her left ring finger (subtle, not sparkling or a focal point).
+- **Sola** (`reference/solaw.png`) — Girl child. Add her whenever a scene calls for a girl or female child.
+- **Brayden** (`reference/braydenw.png`) — Boy child. Add him whenever a scene calls for a boy or male child.
+- **All four together** — ONLY when the scene explicitly calls for a family. Do not combine all four for non-family scenes.
+
+Each character's role in `main_characters` specifies position, clothing, expression, and actions for THIS specific scene. Clothing is NEVER generic or fixed — it matches the historical period, setting, and cultural context of the scene.
+
+Character prominence depends on scene type:
   - **Personal/emotional moments** — foreground, center frame, large in composition
   - **Historical/data scenes** — background, peripheral, observing, examining
   - **Object/artifact scenes** — character interacts with the object (examining, holding, standing beside)
@@ -181,7 +196,7 @@ Default configuration used by the pipeline (`tools/generate_images.py`):
 
 ## Pipeline Integration
 
-The JSON prompts are stored as the prompt value in Python tuples inside `generate_images.py`:
+The JSON prompts are stored as 3-tuples in `generate_images.py`: `(name, ref_characters, json_prompt)`.
 
 ```python
 import json
@@ -190,8 +205,9 @@ IMAGES = [
     # ── s1_hook (H01-H03) ──
     # Narration: farmer takes mortgage to bank, pays with wheat sale coins
 
-    ("H01", json.dumps({
+    ("H01", ["joseph"], json.dumps({
         "image_description": {
+            "ref_characters": ["joseph"],
             "metadata": {
                 "art_style": "Boondocks-style animation, graphic novel illustration",
                 "setting": "Rural bank interior, 1930s Oklahoma",
@@ -236,7 +252,8 @@ IMAGES = [
         }
     })),
 
-    ("H02", json.dumps({...})),
+    ("H02", ["joseph", "jess"], json.dumps({...})),  # Scene with woman — add Jess
+    ("H03", ["joseph", "jess", "sola", "brayden"], json.dumps({...})),  # Family scene — all four
 ]
 ```
 
@@ -259,11 +276,13 @@ The `narrative_context` field must match the exact narration words spoken during
 Before finalizing each JSON prompt, verify:
 
 1. **metadata.art_style** — Starts with "Boondocks-style animation". Zero photography terms anywhere in the entire prompt.
-2. **main_characters** — Reference character is present with period-specific clothing and 2-3 specific actions.
-3. **main_characters[].appearance.clothing** — Explicitly described, historically accurate, not generic. Never "casual clothes" or "normal outfit".
-4. **key_objects** — Every important object named, located, and detailed. `visible_text` specified if text should appear in the image.
-5. **environment_details.lighting** — At least one specific light source described (not just "well lit" or "bright").
-6. **narrative_context** — Matches the exact narration moment this image covers. Verified during W8b.
-7. **No duplicate compositions** — This image looks distinct from the previous and next image in sequence. Vary camera angle, character position, or environment.
-8. **No anachronisms** — Clothing, architecture, objects, and technology match the stated time period.
-9. **metadata.color_palette** — 3-5 colors that support the mood and setting. No palette should repeat identically across consecutive images.
+2. **ref_characters** — Array is present and matches the characters described in `main_characters`. Joseph in most/all images; Jess when a woman is in the scene; Sola/Brayden when children are present; all four only for family scenes.
+3. **main_characters** — Each referenced character is present with period-specific clothing and 2-3 specific actions.
+4. **main_characters[].appearance.clothing** — Explicitly described, historically accurate, not generic. Never "casual clothes" or "normal outfit".
+5. **key_objects** — Every important object named, located, and detailed. `visible_text` specified if text should appear in the image.
+6. **environment_details.lighting** — At least one specific light source described (not just "well lit" or "bright").
+7. **narrative_context** — Matches the exact narration moment this image covers. Verified during W8b.
+8. **No duplicate compositions** — This image looks distinct from the previous and next image in sequence. Vary camera angle, character position, or environment.
+9. **No anachronisms** — Clothing, architecture, objects, and technology match the stated time period.
+10. **metadata.color_palette** — 3-5 colors that support the mood and setting. No palette should repeat identically across consecutive images.
+11. **Wedding rings** — If Joseph appears, clothing includes "a simple gold wedding band on left ring finger". If Jess appears, clothing includes "a modest diamond engagement ring on left ring finger". Never describe rings as shiny, sparkling, gleaming, or glowing — they are subtle background details.

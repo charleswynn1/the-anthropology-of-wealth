@@ -20,21 +20,21 @@ ROOT = Path(__file__).resolve().parent.parent
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "invention-of-the-coin"
+PROJECT_NAME = "gold-became-money"
 FPS = 30
 
 # Section structure: (section_name, [(audio_filename, num_visuals), ...])
 # Each section can have one or more audio files.
 # num_visuals = how many image components that audio file covers.
 SECTIONS = [
-    ("hook",             [("s1_hook", 10)]),
-    ("setup",            [("s2_setup", 14)]),
-    ("lydia",            [("s3_lydia", 22)]),
-    ("athens",           [("s4_athens", 30)]),
-    ("alexander",        [("s5_alexander", 29)]),
-    ("rome",             [("s6_rome", 31)]),
-    ("modern",           [("s7_modern", 39)]),
-    ("closing",          [("s8_closing", 22)]),
+    ("hook",          [("s1_hook", 9)]),
+    ("chemistry",     [("s2_chemistry", 35)]),
+    ("lydia",         [("s3_lydia", 39)]),
+    ("potosi",        [("s4_potosi", 34)]),
+    ("gold_standard", [("s5_gold_standard", 41)]),
+    ("nixon",         [("s6_nixon", 28)]),
+    ("modern",        [("s7_modern", 34)]),
+    ("close",         [("s8_close", 29)]),
 ]
 
 # ══════════════════════════════════════════════════════════

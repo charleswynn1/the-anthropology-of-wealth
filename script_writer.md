@@ -105,6 +105,16 @@ SCRIPT FORMAT REQUIREMENTS:
 1. FULL SCRIPT
 Write the script in voiceover-ready prose.
 
+Organize the script into clearly labeled sections using this exact format for each section header:
+
+[s1_hook]
+[s2_setup]
+[s3_sectionname]
+
+(one word slug after the section number, no spaces, no colons, no brackets inside brackets)
+
+Separate each section with a line containing only: ---
+
 The script should include:
 - opening hook
 - intro/setup

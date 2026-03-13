@@ -19,6 +19,8 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **GOD NOT UNIVERSE RULE: Never personify "the universe" as an agent or decision-maker in narration. When attributing design, intention, or constraint to a higher power, use "God" instead. For example: "The universe constrained the choice" → "God constrained the choice".**
 
+**CHARACTER CASTING RULE: The project has four reference characters. Joseph (`reference/joseph.png`) is the main male character and MUST appear in most or all images. Jess (`reference/jessw.png`) is the main female character — use her whenever a scene involves a woman or female figure. Sola (`reference/solaw.png`) represents girl children and Brayden (`reference/braydenw.png`) represents boy children — use them whenever a scene calls for kids. Use all four together ONLY when the scene explicitly calls for a family. Each image prompt's `ref_characters` array controls which reference images are sent to Gemini for that image. Joseph always wears a simple gold wedding band on his left ring finger. Jess always wears a modest diamond engagement ring on her left ring finger. The rings should be subtle and understated — not shiny, not sparkling, not a focal point. They are just there, part of who the characters are.**
+
 **API CALL RULE: NEVER call the ElevenLabs or Gemini APIs more than once per file.** Audio and image generation scripts must only run once. If a file already exists, the scripts skip it automatically. Do NOT re-run generation scripts unless an API error occurred or the user explicitly asks to regenerate. These API calls cost money — treat every call as final.
 
 ## Pipeline Overview
@@ -245,7 +247,7 @@ Now that exact clip durations are known, write the image prompts into `generate_
 Edit `tools/generate_images.py`:
 - Add `import json` at the top of the IMAGES section
 - Set `PROJECT_NAME = "<project>"`
-- Replace `IMAGES` with image prompt tuples grouped by clip: `("H01", json.dumps({...}))`. The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
+- Replace `IMAGES` with image prompt tuples grouped by clip: `("H01", ["joseph"], json.dumps({...}))`. The second element is the `ref_characters` list — which character references to send for this image (e.g., `["joseph"]`, `["joseph", "jess"]`, `["joseph", "sola", "brayden"]`, or `["joseph", "jess", "sola", "brayden"]` for family scenes). The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
 
 ```bash
 python3 tools/generate_images.py
@@ -451,7 +453,7 @@ When the user approves the video (says "render", "publish", "ship it", "looks go
 ## Important Rules
 - NEVER render without explicit user permission
 - NEVER use SVGs for visuals — all visuals must be Gemini-generated images
-- Always send `reference/character.png` as multimodal input to Gemini (`USE_REF_IMAGE = True`)
+- Always send `reference/joseph.png` as the primary character reference to Gemini; add `jessw.png`, `solaw.png`, `braydenw.png` based on scene cast (see CHARACTER CASTING RULE)
 - All image prompts must use structured JSON format from `/gemini-flash-image-prompting` — never flat prose strings
 - Character dress and appearance in every image must match the scene's historical period, setting, and cultural context — specified in `main_characters[].appearance.clothing` in the JSON prompt
 - Audio durations drive visual timings — each audio Sequence uses exact clip duration
