@@ -20,7 +20,7 @@ See @Open Loops.pdf for 16 proven open loop formats with examples.
 
 Six evidence-based rules drawn from VidIQ's 9M-title study and Marcus Jones' analysis of 94K titles from the top 100 YouTubers. Run every title through this checklist before finalizing.
 
-1. **Title Length** — **6-8 words / ~42 characters** is the sweet spot. Nearly 60% of top-100 creator titles land here; fewer than 20% of all YouTube titles do. Frontload the hook in the first half.
+1. **Title Length** — **5-7 words / ~34 characters** is the preferred target for this channel. Shorter titles process faster, leave more room for the thumbnail to carry context, and force tighter word choice. The data sweet spot is 6-8 words / ~42 characters, but lean toward the shorter end. Hard limit: 50 characters.
 2. **Point of View** — Default to **neutral** (no personal reference). Use first person when personal experience is the hook. Avoid second person (reads like commands) and third person (reads like headlines about strangers). Top-100 split: 70% neutral, 27% first person, 3% second+third.
 3. **Voice** — Default to **neutral** (descriptive phrase, no clear subject). Use active voice when there's a clear action/transformation. Skip passive entirely. Top-100 split: 57% neutral, 42% active, ~1% passive.
 4. **Capitalization** — Use **Title Case** (57% of top-100 titles) or **Mixed Case** for emphasis on one key word (28%). Avoid sentence case, all caps, and all lowercase.
@@ -64,8 +64,8 @@ Use **power words** — specific words that make titles more intriguing without 
 Your title competes with dozens of others on screen. If it takes too long to process, viewers' eyes skip to a faster title.
 
 **Rules:**
-- Aim for **6-8 words / ~42 characters** — this is the sweet spot where nearly 60% of top-100 creator titles land
-- **55 characters** is the outer limit, not the target
+- Aim for **5-7 words / ~34 characters** — this channel's preferred target. Shorter titles force tighter word choice and process faster on screen.
+- **50 characters** is the hard limit for this channel
 - Frontload the most important words — the core message must be clear from the **first half**
 - People skim, they don't read word-for-word
 - YouTube truncates with "..." on some devices — put the hook first, context second

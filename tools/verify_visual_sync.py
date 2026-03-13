@@ -39,7 +39,9 @@ def parse_visuals_order(project: str) -> dict[str, list[str]]:
     for name in section_names:
         m = re.search(rf"export const {name}\s*=\s*\[(.*?)\];", content, re.DOTALL)
         if m:
-            result[name] = re.findall(r"\b([A-Z]+\d+)\b", m.group(1))
+            # Strip // comments before scanning for image IDs to avoid false positives
+            array_content = re.sub(r"//[^\n]*", "", m.group(1))
+            result[name] = re.findall(r"\b([A-Z]+\d+)\b", array_content)
     return result
 
 

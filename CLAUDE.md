@@ -433,7 +433,7 @@ cd /Users/charleswynn/Desktop/The Anthropology of Wealth && npm start
 
 ## Post-Approval Pipeline
 
-When the user approves the video (says "render", "publish", "ship it", "looks good", etc.), read `.claude/pipeline_post_approval.md` and execute Waves 9–12 in full. Do not stop between steps. Do not wait for confirmation.
+When the user approves the video (says "render", "publish", "ship it", "looks good", "approved", "confirmed", "complete project", or any clear signal of approval), read `.claude/pipeline_post_approval.md` and execute Waves 9–12 in full. Do not stop between steps. Do not wait for confirmation.
 
 ---
 
