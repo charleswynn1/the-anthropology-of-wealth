@@ -418,6 +418,8 @@ Full guide in `script_writer.md`. These rules apply to every narration line:
 - **No contrasting pairs**: no "Not X. Y." constructions in any form — rewrite as a direct statement
 - **Fillers**: mix Okay/Hmm/Alright/Yeah into every section, 1–3 per section, start of sentence only
 - **"Check this out"**: use exactly once per video, at the most interesting or surprising moment — this is the only permitted exception to the no-setup-transitions rule
+- **"That's crazy"**: use exactly once per video, immediately after delivering a genuinely shocking fact
+- **"That's crazy, right?"**: use exactly once per video, immediately after delivering a genuinely shocking fact — distinct moment from "that's crazy", not back to back
 
 ## Current Projects
 
