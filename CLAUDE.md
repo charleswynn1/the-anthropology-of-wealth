@@ -417,6 +417,7 @@ Full guide in `script_writer.md`. These rules apply to every narration line:
 - **No staccato stacks**: no three-or-more short punchy fragments in a row ("Natural. Compounding. Relentless." → rewrite as prose)
 - **No contrasting pairs**: no "Not X. Y." constructions in any form — rewrite as a direct statement
 - **Fillers**: mix Okay/Hmm/Alright/Yeah into every section, 1–3 per section, start of sentence only
+- **"Check this out"**: use exactly once per video, at the most interesting or surprising moment — this is the only permitted exception to the no-setup-transitions rule
 
 ## Current Projects
 
