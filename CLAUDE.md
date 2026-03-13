@@ -8,7 +8,7 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **IMAGE FILENAME RULE: Image filenames are deterministic and known at script-writing time (e.g., H01.png, AL17.png). Do NOT wait for W3b to finish before writing `visuals.tsx` and the Composition. Write them as soon as W4/W5a are done — the files will exist by the time the preview launches. Only `verify_timings.py` and `npm start` must wait for all images to be present.**
 
-**DATE FORMAT RULE: Always use BC and AD instead of BCE and CE. If a script uses "BCE" or "CE" or "Before Common Era" or "Common Era", replace with BC and AD before proceeding.**
+**DATE FORMAT RULE: Always write dates as "BC" and "AD" spelled out for TTS: "BC" → "before Christ", "AD" → "anno Domini". Never use BCE, CE, Before Common Era, or Common Era. Example: "630 BC" reads as "six thirty before Christ".**
 
 **API CALL RULE: NEVER call the ElevenLabs or Gemini APIs more than once per file.** Audio and image generation scripts must only run once. If a file already exists, the scripts skip it automatically. Do NOT re-run generation scripts unless an API error occurred or the user explicitly asks to regenerate. These API calls cost money — treat every call as final.
 
