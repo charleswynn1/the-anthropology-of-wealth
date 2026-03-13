@@ -9,6 +9,7 @@ and flags any mismatches before the Remotion preview launches.
 Usage: python3 tools/verify_visual_sync.py <project>
 """
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -67,7 +68,35 @@ def parse_narration(project: str) -> dict[str, str]:
     return sections
 
 
-def get_narration_at_second(text: str, target_sec: float, total_sec: float) -> str:
+def load_alignment(project: str, audio_file: str) -> dict | None:
+    """Load character-level alignment JSON saved by generate_audio.py, if present."""
+    json_path = ROOT / f"projects/{project}/audio/{audio_file}.json"
+    if json_path.exists():
+        return json.loads(json_path.read_text())
+    return None
+
+
+def get_narration_at_second_precise(alignment: dict, target_sec: float, window: float = 3.5) -> str:
+    """Return the words spoken during [target_sec, target_sec + window] using alignment data."""
+    chars       = alignment["characters"]
+    start_times = alignment["character_start_times_seconds"]
+    end_times   = alignment["character_end_times_seconds"]
+
+    # Collect characters whose window overlaps [target_sec, target_sec + window]
+    window_end = target_sec + window
+    in_window = []
+    for i, char in enumerate(chars):
+        if start_times[i] <= window_end and end_times[i] >= target_sec:
+            in_window.append(char)
+
+    text = "".join(in_window).strip()
+    # Trim to reasonable length
+    words = text.split()
+    return " ".join(words[:16]) + ("..." if len(words) > 16 else "")
+
+
+def get_narration_at_second_estimated(text: str, target_sec: float, total_sec: float) -> str:
+    """Fallback: estimate narration position by word count when no alignment data exists."""
     words = text.split()
     if not words or total_sec <= 0:
         return ""
@@ -131,17 +160,26 @@ def main():
 
     all_ok = True
 
+    # Map section index to audio filename (nar_key → audio file stem)
+    audio_file_map = {
+        "s1_hook": "s1_hook", "s2_setup": "s2_setup", "s3_lydia": "s3_lydia",
+        "s4_athens": "s4_athens", "s5_alexander": "s5_alexander",
+        "s6_rome": "s6_rome", "s7_modern": "s7_modern", "s8_closing": "s8_closing",
+    }
+
     for sec_idx, (vis_key, nar_key, label) in enumerate(SECTION_KEYS):
-        images   = visuals.get(vis_key, [])
+        images     = visuals.get(vis_key, [])
         timing_row = timings[sec_idx] if sec_idx < len(timings) else []
         narration  = narrations.get(nar_key, "")
+        alignment  = load_alignment(project, audio_file_map.get(nar_key, nar_key))
 
         sec_start_f = section_starts[sec_idx]
         sec_total_f = sum(timing_row)
         sec_total_s = sec_total_f / FPS
+        precision   = "character-level" if alignment else "estimated"
 
         print(f"{'─'*80}")
-        print(f"[{label.upper()}]  {fmt_time(sec_start_f/FPS)}  |  {len(images)} images  |  {sec_total_s:.1f}s")
+        print(f"[{label.upper()}]  {fmt_time(sec_start_f/FPS)}  |  {len(images)} images  |  {sec_total_s:.1f}s  |  narration: {precision}")
         print(f"{'─'*80}")
 
         if len(images) != len(timing_row):
@@ -153,10 +191,14 @@ def main():
         for i, (img_id, dur) in enumerate(zip(images, timing_row)):
             img_start_s = (sec_start_f + local_offset) / FPS
             img_end_s   = (sec_start_f + local_offset + dur) / FPS
-            local_s     = local_offset / FPS          # position within section
+            local_s     = local_offset / FPS
 
             desc = descriptions.get(img_id, "[no description]")
-            nar  = get_narration_at_second(narration, local_s, sec_total_s)
+
+            if alignment:
+                nar = get_narration_at_second_precise(alignment, local_s, window=dur / FPS)
+            else:
+                nar = get_narration_at_second_estimated(narration, local_s, sec_total_s)
 
             local_offset += dur
 

@@ -9,6 +9,8 @@ Usage:
   3. Run: python3 generate_audio.py
 """
 
+import base64
+import json
 import os
 import sys
 from pathlib import Path
@@ -194,30 +196,129 @@ OUT = ROOT / f"projects/{PROJECT_NAME}/audio"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
+def _seconds_to_srt_time(seconds: float) -> str:
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds % 1) * 1000)
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def _alignment_to_words(chars, start_times, end_times, time_offset=0.0):
+    entries = []
+    current_word = ""
+    word_start = None
+    for i, char in enumerate(chars):
+        t_start = start_times[i]
+        t_end = end_times[i]
+        if char == " " or i == len(chars) - 1:
+            if i == len(chars) - 1 and char != " ":
+                current_word += char
+                t_end_final = t_end
+            else:
+                t_end_final = t_start
+            if current_word.strip():
+                entries.append({
+                    "word": current_word.strip(),
+                    "start": word_start + time_offset,
+                    "end": t_end_final + time_offset,
+                })
+            current_word = ""
+            word_start = None
+        else:
+            if word_start is None:
+                word_start = t_start
+            current_word += char
+    return entries
+
+
+def _words_to_srt(word_entries, words_per_block=5):
+    lines = []
+    index = 1
+    i = 0
+    while i < len(word_entries):
+        block = word_entries[i: i + words_per_block]
+        block_start = block[0]["start"]
+        block_end = block[-1]["end"]
+        text = " ".join(w["word"] for w in block)
+        lines.append(str(index))
+        lines.append(f"{_seconds_to_srt_time(block_start)} --> {_seconds_to_srt_time(block_end)}")
+        lines.append(text)
+        lines.append("")
+        index += 1
+        i += words_per_block
+    return "\n".join(lines)
+
+
 def generate_tts():
+    all_word_entries = []   # accumulated across sections for combined SRT
+    cumulative_offset = 0.0
+
     for fname, text in SECTIONS:
-        out_path = OUT / f"{fname}.mp3"
-        if out_path.exists():
+        mp3_path = OUT / f"{fname}.mp3"
+        json_path = OUT / f"{fname}.json"
+        srt_path  = OUT / f"{fname}.srt"
+
+        if mp3_path.exists() and json_path.exists():
             print(f"  SKIP {fname} (exists)")
+            # Still load alignment to keep cumulative offset accurate
+            data = json.loads(json_path.read_text())
+            end_times = data.get("character_end_times_seconds", [])
+            section_duration = end_times[-1] if end_times else 0.0
+            cumulative_offset += section_duration
             continue
+
         words = len(text.split())
         print(f"  TTS: {fname} (~{words} words)")
         try:
-            audio = client.text_to_speech.convert(
+            response = client.text_to_speech.convert_with_timestamps(
                 voice_id=VOICE_ID,
                 text=text,
                 model_id=MODEL,
                 output_format=FMT,
                 voice_settings=VOICE_SETTINGS,
             )
-            with open(out_path, "wb") as f:
-                for chunk in audio:
-                    f.write(chunk)
+
+            # Save MP3  (response.audio_base_64 uses underscore — ElevenLabs SDK quirk)
+            audio_bytes = base64.b64decode(response.audio_base_64)
+            mp3_path.write_bytes(audio_bytes)
+
+            # Save alignment JSON
+            alignment = response.alignment
+            chars      = alignment.characters
+            start_times = alignment.character_start_times_seconds
+            end_times   = alignment.character_end_times_seconds
+            alignment_data = {
+                "characters": chars,
+                "character_start_times_seconds": start_times,
+                "character_end_times_seconds": end_times,
+            }
+            json_path.write_text(json.dumps(alignment_data, indent=2))
+
+            # Save per-section SRT
+            word_entries = _alignment_to_words(chars, start_times, end_times)
+            srt_path.write_text(_words_to_srt(word_entries))
+
+            # Accumulate for combined SRT (offset by cumulative duration of prior sections)
+            word_entries_offset = _alignment_to_words(
+                chars, start_times, end_times, time_offset=cumulative_offset
+            )
+            all_word_entries.extend(word_entries_offset)
+            section_duration = end_times[-1] if end_times else 0.0
+            cumulative_offset += section_duration
+
             char_count = len(text)
             cost = log_elevenlabs_cost(OUT.parent, "tts", char_count, fname)
-            print(f"    OK {out_path} (cost: ${cost:.4f})")
+            print(f"    OK  {mp3_path.name}  |  {srt_path.name}  |  {json_path.name}  (cost: ${cost:.4f})")
+
         except Exception as e:
             print(f"    FAIL: {e}")
+
+    # Write combined SRT for the full video (used for YouTube upload)
+    if all_word_entries:
+        combined_srt_path = OUT / f"{PROJECT_NAME}.srt"
+        combined_srt_path.write_text(_words_to_srt(all_word_entries))
+        print(f"\n  Combined SRT → {combined_srt_path}")
 
 
 if __name__ == "__main__":
