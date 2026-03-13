@@ -9,7 +9,15 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 **IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 7). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
 
 
+**MEASUREMENTS RULE: All measurements in narration must use US units — Fahrenheit (not Celsius), feet/miles (not meters/kilometers), ounces/pounds (not grams/kilograms). Convert at the time of writing: e.g., "1768°C" → "thirty two hundred and fourteen degrees Fahrenheit", "3.5 grams" → "about an eighth of an ounce".**
+
 **DATE FORMAT RULE: Never write BC, AD, BCE, or CE in narration. For ancient dates, write the full phrase: "630 BC" → "six hundred thirty years before Christ", "300 AD" → "three hundred years after Christ's death". For years from roughly 1000 AD onward, just say the year naturally with no era suffix: "1600" → "sixteen hundred", "1776" → "seventeen seventy six", "2008" → "two thousand eight".**
+
+**IMAGE STYLE RULE: Never write "photorealistic", "photography style", "documentary photography", or "macro photography" in image prompts. All images must be in the Boondocks-style animation art style. Photography-style keywords override the animation instruction and produce hyper-realistic images.**
+
+**IMAGE PROMPT FORMAT RULE: All image prompts MUST use the structured JSON format defined in the `/gemini-flash-image-prompting` skill. Load the skill before writing any image prompts. Every prompt is a `json.dumps()` call wrapping the `image_description` JSON object — never flat prose strings. The JSON schema ensures every element (characters, objects, environment, lighting, narrative context) is explicitly specified. Run every prompt through the skill's Prompt Quality Checklist before finalizing.**
+
+**GOD NOT UNIVERSE RULE: Never personify "the universe" as an agent or decision-maker in narration. When attributing design, intention, or constraint to a higher power, use "God" instead. For example: "The universe constrained the choice" → "God constrained the choice".**
 
 **API CALL RULE: NEVER call the ElevenLabs or Gemini APIs more than once per file.** Audio and image generation scripts must only run once. If a file already exists, the scripts skip it automatically. Do NOT re-run generation scripts unless an API error occurred or the user explicitly asks to regenerate. These API calls cost money — treat every call as final.
 
@@ -100,7 +108,7 @@ Also include:
 - CORE IDEA
 - KEY MONEY LESSON
 - VIEWER TAKEAWAY
-- IMAGE PROMPTS (Python tuples ready for generate_images.py)
+- IMAGE PROMPTS (Python tuples with structured JSON prompts ready for generate_images.py — use `/gemini-flash-image-prompting` schema)
 
 Save the complete output to `projects/<project>/script.md`.
 
@@ -232,9 +240,12 @@ Capture the final VISUAL_TIMINGS array, AUDIO_SECTIONS config, and TOTAL_FRAMES.
 
 Now that exact clip durations are known, write the image prompts into `generate_images.py`. Each clip's images must depict only what that clip's narration describes — not other parts of the video.
 
+**Before writing any prompts:** Load the `/gemini-flash-image-prompting` skill. All prompts must use the structured JSON format — `json.dumps({"image_description": {...}})` — never flat prose strings. Follow the skill's JSON Prompt Schema for every field and run each prompt through the Prompt Quality Checklist.
+
 Edit `tools/generate_images.py`:
+- Add `import json` at the top of the IMAGES section
 - Set `PROJECT_NAME = "<project>"`
-- Replace `IMAGES` with image prompt tuples grouped by clip. The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
+- Replace `IMAGES` with image prompt tuples grouped by clip: `("H01", json.dumps({...}))`. The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
 
 ```bash
 python3 tools/generate_images.py
@@ -441,7 +452,8 @@ When the user approves the video (says "render", "publish", "ship it", "looks go
 - NEVER render without explicit user permission
 - NEVER use SVGs for visuals — all visuals must be Gemini-generated images
 - Always send `reference/character.png` as multimodal input to Gemini (`USE_REF_IMAGE = True`)
-- Character dress and appearance in every image must match the scene's historical period, setting, and cultural context — specify clothing explicitly in each prompt
+- All image prompts must use structured JSON format from `/gemini-flash-image-prompting` — never flat prose strings
+- Character dress and appearance in every image must match the scene's historical period, setting, and cultural context — specified in `main_characters[].appearance.clothing` in the JSON prompt
 - Audio durations drive visual timings — each audio Sequence uses exact clip duration
 - All numbers in scripts must be fully spelled out for TTS
 - Root scripts use `Path(__file__)` for paths — runnable from any working directory
@@ -471,3 +483,4 @@ Full guide in `script_writer.md`. These rules apply to every narration line:
 *Reference: `.claude/reference.md` — project structure, per-script config, defaults*
 *Reference: `script_writer.md` — full channel style guide and output format*
 *Reference: `.claude/pipeline_post_approval.md` — Waves 9–12 (render, upload, archive)*
+*Skill: `/gemini-flash-image-prompting` — structured JSON prompt schema, art style rules, character presence rules, API config*
