@@ -1,13 +1,13 @@
 import { Composition } from "remotion";
-import { InventionOfTheCoin } from "./invention-of-the-coin/InventionOfTheCoin";
+import { WarDollar } from "./war-dollar/WarDollar";
 
 export const RemotionRoot = () => {
   return (
     <>
       <Composition
-        id="InventionOfTheCoin"
-        component={InventionOfTheCoin}
-        durationInFrames={40478}
+        id="WarDollar"
+        component={WarDollar}
+        durationInFrames={49051}
         fps={30}
         width={1920}
         height={1080}

@@ -6,7 +6,9 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **VISUAL SYNC RULE: Images must match the narration playing beneath them. Do NOT assign one audio file per section and distribute images evenly — that guarantees mismatches. Instead, split each section's narration into clips at every visual topic change. Each clip is its own audio file (e.g., `s7_potosi`, `s7_seigniorage`, `s7_loans`) and gets its own image set. Images are only distributed evenly within a single clip, so they stay locked to the right words. A "visual topic change" is any moment where the scene, subject, time period, or concept shifts enough that the current images would look wrong.**
 
-**IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 7). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
+**IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 10). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
+
+**PROMPT WINDOW RULE: Before writing any image prompts in W3b, run `python3 tools/generate_prompt_windows.py <project>` and read the output. This prints the exact narration words spoken during each 10-second window for every audio clip. Write each image prompt for its specific window's words — not for the section topic in general. The `narrative_context` field must match or closely paraphrase the words shown for that window. Ordering by theme instead of by timestamp is the single most common cause of visual sync errors.**
 
 
 **MEASUREMENTS RULE: All measurements in narration must use US units — Fahrenheit (not Celsius), feet/miles (not meters/kilometers), ounces/pounds (not grams/kilograms). Convert at the time of writing: e.g., "1768°C" → "thirty two hundred and fourteen degrees Fahrenheit", "3.5 grams" → "about an eighth of an ounce".**
@@ -50,6 +52,8 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 *Music (W3c) starts after Research Phase 3 — does not wait for the full script.
 
 **PARALLEL EXECUTION RULE:** Steps within the same wave run simultaneously. Do not wait for one track to finish before starting another track in the same wave. Each track proceeds independently as soon as its own dependency is met.
+
+**AGENT OUTPUT TOKEN LIMIT RULE:** Agents have a hard 32,000 output token limit. Never use an agent to write a full script in one call — it will hit the limit and produce nothing. Instead: write narration sections directly with the Write tool, then append image prompts separately with the Edit tool. Break any agent task that would produce more than ~20,000 tokens into smaller pieces. If an agent hits the limit, resume it with the `resume` parameter and pick up where it stopped.
 
 ## Automation Steps
 
@@ -186,6 +190,8 @@ python3 tools/notify.py script <project>
 
 ---
 
+**PYTHON INTERPRETER RULE:** All pipeline scripts (generate_audio.py, generate_images.py, generate_music.py, calculate_timings.py, verify_timings.py, verify_visual_sync.py) must be run with `/Users/charleswynn/Desktop/youtube_automation/.venv/bin/python3`. The system `python3` (Python 3.14) does NOT have the required packages (elevenlabs, google-genai). Use the full venv path every time. The notify.py and check_script.py scripts can use the system python3.
+
 **W3a: Generate audio** *(depends on W2 — needs narration text)*
 
 Edit `tools/generate_audio.py`:
@@ -234,7 +240,7 @@ SECTIONS = [
 python3 tools/calculate_timings.py
 ```
 
-Read the actual seconds per clip from the output. Then compute final image count for each clip: `ceil(actual_seconds / 7)`. Update `SECTIONS` with the real counts and re-run:
+Read the actual seconds per clip from the output. Then compute final image count for each clip: `ceil(actual_seconds / 10)`. Update `SECTIONS` with the real counts and re-run:
 
 ```bash
 python3 tools/calculate_timings.py
@@ -250,12 +256,18 @@ Capture the final VISUAL_TIMINGS array, AUDIO_SECTIONS config, and TOTAL_FRAMES.
 
 Now that exact clip durations are known, write the image prompts into `generate_images.py`. Each clip's images must depict only what that clip's narration describes — not other parts of the video.
 
-**Before writing any prompts:** Load the `/gemini-flash-image-prompting` skill. All prompts must use the structured JSON format — `json.dumps({"image_description": {...}})` — never flat prose strings. Follow the skill's JSON Prompt Schema for every field and run each prompt through the Prompt Quality Checklist.
+**Before writing any prompts:** Run `python3 tools/generate_prompt_windows.py <project>` and read the full output. Then load the `/gemini-flash-image-prompting` skill. All prompts must use the structured JSON format — `json.dumps({"image_description": {...}})` — never flat prose strings. Follow the skill's JSON Prompt Schema for every field and run each prompt through the Prompt Quality Checklist. Write each prompt for its specific 10-second window's narration text, not for the section topic in general.
 
 Edit `tools/generate_images.py`:
 - Add `import json` at the top of the IMAGES section
 - Set `PROJECT_NAME = "<project>"`
 - Replace `IMAGES` with image prompt tuples grouped by clip: `("H01", ["joseph"], json.dumps({...}))`. The second element is the `ref_characters` list — which character references to send for this image (e.g., `["joseph"]`, `["joseph", "jess"]`, `["joseph", "sola", "brayden"]`, or `["joseph", "jess", "sola", "brayden"]` for family scenes). The number of prompts per clip = the count computed in W4. Write prompts in narration order — the order of prompts in the list determines the order images appear in the video. Do NOT order by filename or any other convention; order by the sequence of scenes in the narration.
+
+Before running the API, verify prompt order:
+```bash
+python3 tools/verify_prompt_order.py <project>
+```
+This checks that each image's `narrative_context` matches its assigned 10-second window using word overlap scoring. Fix any flagged images in `generate_images.py` before proceeding — regenerating mismatched images costs money.
 
 ```bash
 python3 tools/generate_images.py
@@ -420,7 +432,7 @@ python3 tools/verify_timings.py <project>
 ```
 Checks that `timing.ts` is correct before launching the preview:
 - Confirms total frames match actual audio file durations (within 1s tolerance)
-- Flags any section where images show for more than 8 seconds — a sign there are too few visuals
+- Flags any section where images show for more than 12 seconds — a sign there are too few visuals
 
 **If warnings (images showing too long):** generate additional images for those sections, add them to `visuals.tsx`, update `SECTIONS` in `calculate_timings.py` with the new image counts, re-run `calculate_timings.py`, update `timing.ts` and `AUDIO_SECTIONS`, then re-run `verify_timings.py`.
 

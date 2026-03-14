@@ -31,18 +31,16 @@ client = ElevenLabs(api_key=API_KEY)
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "gold-became-money"  # Folder name under projects/
+PROJECT_NAME = "war-dollar"  # Folder name under projects/
 
 MUSIC_PROMPT = (
-    "Ancient-modern documentary instrumental: deep resonant low brass and slowly pulsing "
-    "bass drones beneath sparse, deliberate piano notes — each note weighted, like a gold "
-    "coin placed on a scale. Subtle metallic shimmer in the high frequencies evoking "
-    "ancient forges and molten metal. The arc moves from reverent and timeless in the "
-    "opening, through mounting tension in the middle, to a cool investigative unease at "
-    "the close — the feeling of discovering something powerful that has never actually "
-    "stopped. Steady 70 to 80 BPM. No vocals. Cinematic, atmospheric, and historically "
-    "grounded — suitable for narration spanning from ancient Lydia and Potosi to Nixon's "
-    "Camp David and modern central bank gold buying."
+    "Geopolitical documentary instrumental: slow, weighty low brass and deep bass pulses "
+    "beneath sparse piano lines. The feel of a cold war intelligence briefing room crossed "
+    "with a modern investigative documentary. Opens with quiet tension and deliberate "
+    "restraint, builds through a middle section of mounting dread and mechanical inevitability, "
+    "closes with a cool, unresolved unease. Steady 65 to 75 BPM. No vocals. No triumphant "
+    "resolution. Cinematic and serious — suitable for narration spanning Nixon's Camp David, "
+    "Kissinger in Riyadh, Desert Storm, the Iraq War, and the Strait of Hormuz crisis."
 )
 
 MUSIC_LENGTH_MS = 300000  # 5 minutes (300,000 ms)

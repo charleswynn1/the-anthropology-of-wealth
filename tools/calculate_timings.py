@@ -20,21 +20,35 @@ ROOT = Path(__file__).resolve().parent.parent
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "gold-became-money"
+PROJECT_NAME = "war-dollar"
 FPS = 30
 
 # Section structure: (section_name, [(audio_filename, num_visuals), ...])
 # Each section can have one or more audio files.
 # num_visuals = how many image components that audio file covers.
+# NOTE: counts are placeholders — update after running once to get actual durations,
+# then recompute: ceil(actual_seconds / 10)
 SECTIONS = [
-    ("hook",          [("s1_hook", 9)]),
-    ("chemistry",     [("s2_chemistry", 35)]),
-    ("lydia",         [("s3_lydia", 39)]),
-    ("potosi",        [("s4_potosi", 34)]),
-    ("gold_standard", [("s5_gold_standard", 41)]),
-    ("nixon",         [("s6_nixon", 28)]),
-    ("modern",        [("s7_modern", 34)]),
-    ("close",         [("s8_close", 29)]),
+    ("hook",          [("s1_hook", 12)]),
+    ("bretton",       [("s2_bretton_woods", 11)]),
+    ("nixon_shock",   [("s3_nixon_shock", 13)]),
+    ("dollar_crisis", [("s4_dollar_crisis", 12)]),
+    ("the_deal",      [("s5_the_deal", 14)]),
+    ("mechanics",     [("s6_mechanics", 13)]),
+    ("embargo",       [("s7_embargo", 11)]),
+    ("iran",          [("s7_iran", 5)]),
+    ("carter",        [("s8_carter_doctrine", 14)]),
+    ("gulf_war",      [("s9_gulf_war", 10)]),
+    ("blowback",      [("s9_blowback", 7)]),
+    ("euros",         [("s10_euros", 11)]),
+    ("invasion",      [("s10_invasion", 4)]),
+    ("iraq_war",      [("s11_iraq_war", 14)]),
+    ("libya",         [("s12_libya", 15)]),
+    ("the_cost",      [("s13_the_cost", 14)]),
+    ("profiteering",  [("s14_profiteering", 15)]),
+    ("cracks",        [("s15_cracks", 15)]),
+    ("today",         [("s16_today", 16)]),
+    ("close",         [("s17_close", 16)]),
 ]
 
 # ══════════════════════════════════════════════════════════
@@ -44,8 +58,8 @@ SECTIONS = [
 AUDIO_DIR = ROOT / f"projects/{PROJECT_NAME}/audio"
 
 
-WARN_FRAMES_PER_VISUAL = 240   # 8s — warn if any single image shows longer than this
-TARGET_FRAMES_PER_VISUAL = 150  # 5s — ideal target for narration pacing
+WARN_FRAMES_PER_VISUAL = 360   # 12s — warn if any single image shows longer than this
+TARGET_FRAMES_PER_VISUAL = 300  # 10s — ideal target for narration pacing
 
 
 def get_duration_frames(filepath: Path) -> int:

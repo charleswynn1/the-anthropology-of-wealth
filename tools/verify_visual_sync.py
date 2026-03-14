@@ -49,8 +49,25 @@ def parse_image_descriptions(project: str) -> dict[str, str]:
     ]:
         if candidate.exists():
             content = candidate.read_text()
-            return {img: desc for img, desc in re.findall(r'\("([A-Z]+\d+)",\s*"([^"]+)"', content)}
+            result = {}
+            for m in re.finditer(r'\("([A-Z]+\d+)",', content):
+                code = m.group(1)
+                nc = re.search(r'"narrative_context":\s*"([^"]+)"', content[m.start():m.start() + 3000])
+                if nc:
+                    result[code] = nc.group(1)
+            return result
     return {}
+
+
+def parse_images_flat_order(project: str) -> list[str]:
+    """Return image codes from generate_images.py IMAGES list in declaration order."""
+    for candidate in [
+        ROOT / f"projects/{project}/generate_images.py",
+        ROOT / "tools/generate_images.py",
+    ]:
+        if candidate.exists():
+            return re.findall(r'\("([A-Z]+\d+)",', candidate.read_text())
+    return []
 
 
 def parse_narration(project: str) -> dict[str, str]:
@@ -126,13 +143,10 @@ def get_section_keys(project: str) -> list[tuple[str, str, str]]:
     # Parse SECTIONS = [("label", [("audio_file", N), ...]), ...]
     sections_match = re.search(r"SECTIONS\s*=\s*\[(.*?)\]\s*\n", content, re.DOTALL)
     if not sections_match:
-        # fallback hardcoded list
-        return [
-            ("hookVisuals","s1_hook","hook"),("setupVisuals","s2_setup","setup"),
-            ("lydiaVisuals","s3_lydia","lydia"),("athensVisuals","s4_athens","athens"),
-            ("alexanderVisuals","s5_alexander","alexander"),("romeVisuals","s6_rome","rome"),
-            ("modernVisuals","s7_modern","modern"),("closingVisuals","s8_closing","closing"),
-        ]
+        print(f"ERROR: Could not parse SECTIONS from {calc_file}")
+        print("Ensure the file exists and SECTIONS is formatted as:")
+        print('  SECTIONS = [("name", [("audio_file", N), ...]), ...]')
+        sys.exit(1)
     raw = sections_match.group(1)
     section_labels = re.findall(r'\("([^"]+)",\s*\[', raw)
     audio_files_per_section = [re.findall(r'\("([^"]+)",\s*\d+\)', blk)
@@ -166,6 +180,38 @@ def main():
     for row in timings:
         section_starts.append(running)
         running += sum(row)
+
+    # ── Order check: visuals.tsx vs generate_images.py ───────────────────────
+    images_order = parse_images_flat_order(project)
+    visuals_flat  = [code for codes in visuals.values() for code in codes]
+
+    print(f"\n{'='*80}")
+    print(f"ORDER CHECK — visuals.tsx vs generate_images.py")
+    print(f"{'='*80}")
+    if not images_order:
+        print("  (skipped — generate_images.py not found or has no images)")
+    elif not visuals_flat:
+        print("  (skipped — visuals.tsx has no export arrays)")
+    else:
+        mismatches = []
+        n = min(len(images_order), len(visuals_flat))
+        for i in range(n):
+            if images_order[i] != visuals_flat[i]:
+                mismatches.append((i + 1, images_order[i], visuals_flat[i]))
+        if len(images_order) != len(visuals_flat):
+            print(f"  ⚠ COUNT: {len(images_order)} in generate_images.py vs {len(visuals_flat)} in visuals.tsx")
+            all_ok = False
+        if mismatches:
+            print(f"  ⚠ {len(mismatches)} position(s) differ from generate_images.py order:")
+            for pos, img, vis in mismatches[:10]:
+                print(f"    pos {pos:3d}: generate_images.py={img:<8} visuals.tsx={vis}")
+            if len(mismatches) > 10:
+                print(f"    ... and {len(mismatches) - 10} more")
+            print(f"  Note: differences may be intentional W8b sync corrections.")
+            print(f"  If so, update generate_images.py to reflect the corrected order.")
+            all_ok = False
+        else:
+            print(f"  ✓ {len(visuals_flat)} images — order matches generate_images.py")
 
     print(f"\n{'='*80}")
     print(f"VISUAL SYNC REPORT — {project}")

@@ -265,7 +265,7 @@ IMAGES = [
 
 ### Image Count Per Clip
 
-`ceil(actual_audio_seconds / 7)` — computed in W4 from real MP3 durations. Never guess image counts before audio is generated.
+`ceil(actual_audio_seconds / 10)` — computed in W4 from real MP3 durations. Never guess image counts before audio is generated.
 
 ### Narrative Context Verification
 
