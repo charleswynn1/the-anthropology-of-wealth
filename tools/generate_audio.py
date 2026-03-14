@@ -33,7 +33,7 @@ client = ElevenLabs(api_key=API_KEY)
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "war-dollar"  # Folder name under public/ and src/
+PROJECT_NAME = "before-money"  # Folder name under public/ and src/
 
 VOICE_ID = "qI0RnYbkDdDRolu3NKE2"
 MODEL = "eleven_multilingual_v2"
@@ -53,6 +53,88 @@ VOICE_SETTINGS = {
 # ══════════════════════════════════════════════════════════
 
 SECTIONS = [
+    ("s1_hook", """Before there were coins, before there were banks, before there was anything we would recognize as money, a woman sat down in a merchant house and dictated a letter to her husband. She was worried. The creditors had been coming to the door. She needed silver, not promises, silver, and she needed it now. The letter was pressed into a clay tablet, sealed in a clay envelope, loaded onto a donkey, and began a journey of a thousand miles across ancient Anatolia to her husband in the city of Assur.
+
+That woman's name was Taraam Kubii. She lived approximately nineteen hundred years before Christ. And her letter is the oldest financial stress document in human history.
+
+Hmm. It reads like a text message you might send this week."""),
+
+    ("s2_barter", """Almost everyone thinks money started with barter. Somebody had chickens. Somebody else had wheat. The chicken person wanted wheat, the wheat person wanted chickens, they worked it out. Then barter got complicated, so people invented coins. Coins became paper. Paper became digital. And here we are.
+
+That story is in every high school economics textbook. Adam Smith helped popularize it in seventeen seventy six. And it has one enormous problem: anthropologists and archaeologists spent two hundred years searching for a society that used barter before money existed and they found absolutely nothing.
+
+Alright. No society has ever been documented operating primarily on barter before money existed. Not one. What researchers found instead, in every ancient culture they examined, was credit. Gift economies. Debt records. Temple loans. The oldest written documents on earth are not poetry, not law, not literature. They are grain receipts.
+
+Civilization does not begin with exchange. It begins with obligation. With who owes what to whom. And the thing we now call money grew out of that."""),
+
+    ("s3_cowrie", """Okay, so if barter was not the beginning, what did people actually use? Cowrie shells circulated as money across Africa, South Asia, and China for roughly three thousand years. Small, smooth, white, and shaped in a way that made them almost impossible to fake, they were collected from shallow reefs in the Maldive Islands, traded to India, to China, to West Africa. They were inflation resistant, durable, and beautiful. Whole governments ran on them.
+
+Check this out: the same cowrie shell that a family in the Maldives gathered from a reef would, centuries later, travel in the hold of a European ship across the Atlantic and be exchanged for an enslaved person on the coast of West Africa. The shell that had been trusted for three thousand years became the currency of the slave trade. The people who gathered it never knew."""),
+
+    ("s4_yap", """Yeah, then there are the rai stones of Yap Island in the Pacific. These are limestone discs, some of them twelve feet across, weighing up to four tons. They were quarried on the island of Palau, two hundred fifty miles away, and transported by raft across open ocean at the cost of extraordinary labor and, sometimes, human life.
+
+The stones did not move when ownership transferred. The whole island just agreed who owned which stone, and that knowledge lived in the community's collective memory. There was one stone that had sunk to the bottom of the ocean during transport. The community agreed it had not been lost. Ownership could still be transferred on a stone no one could see or touch, sitting at the bottom of the Pacific Ocean.
+
+That is the oldest version of a distributed ledger. The Yap stone is a blockchain four thousand years before computers. The unit of account existed in shared memory, not in any physical location, and it worked for centuries, until an American sea captain named David O'Keefe arrived in the eighteen seventies with a ship and a dynamite quarry. He imported cheap rai stones by the boatload. In one decade, he introduced inflation to an economy that had never experienced it."""),
+
+    ("s5_tally", """In medieval England, the preferred monetary technology was a piece of hazel wood. The tally stick. A notch cut into the wood represented a specific quantity, grain or silver or labor owed. Then the stick was split down the middle. The creditor kept one half. The debtor kept the other. No two splits were identical. You could not forge one without the matching half.
+
+Alright, the English government ran on tally sticks for seven hundred years. When Henry the First needed to collect taxes in the eleven hundreds, he paid his collectors in tally sticks representing future tax receipts. They circulated as money. They were trusted.
+
+In eighteen thirty four, Parliament decided to retire the tally stick system and burn the old sticks. A workman stoked a furnace beneath the House of Lords with two cartloads of sticks. The flues overheated. The paneling caught fire. By morning, both the House of Lords and the House of Commons had burned to the ground. The painter J.M.W. Turner watched from a boat on the Thames and made two paintings of the fire.
+
+The monetary technology of seven hundred years destroyed its replacement in a single night."""),
+
+    ("s6_cacao", """In Mesoamerica, the currency was cacao beans. Real ones. Chocolate, or more precisely the fermented seeds of the cacao tree, circulated as money throughout the Aztec economy and much of Central America. A tamale cost one bean. A rabbit cost ten beans. A turkey hen cost a hundred beans.
+
+Hmm. And the counterfeit problem was so severe that buyers in the market routinely broke each bean open before accepting it. Counterfeiters had perfected the technique of hollowing out a bean, filling it with a mixture of clay and avocado skin, and resealing it so carefully it was indistinguishable from the outside. Every transaction at scale required physical verification of every unit.
+
+That's crazy. The whole ancient economy ran on a currency you literally had to taste to trust."""),
+
+    ("s7_machine", """Okay. Cowrie shells, rai stones, tally sticks, and cacao beans were all different communities' answers to the same question: what can we all agree to trust? Each one worked, sometimes for centuries. And each one was eventually destroyed, not because it failed, but because it became inconvenient to someone with more power.
+
+But there is a deeper story beneath the objects. In ancient Mesopotamia, the first civilization to build money into a complex institution, a structural trap was being built into every grain loan issued from every temple storehouse.
+
+The interest rate on a grain loan in Sumer was thirty three and one third percent annually. That number was not chosen by market forces. It was chosen because the Mesopotamian counting system was based on sixty, and one third expressed in that system is a perfectly clean fraction. Sixty divided by three is twenty. The interest rate that governed an empire for fifteen hundred years was set for arithmetic convenience.
+
+In a good year, a Babylonian farmer might yield twenty five percent above subsistence. That left something after interest. But one bad harvest, one flood, one drought, and the debt became unpayable. Two bad harvests and the farmer's sons were working in the creditor's household. Three bad harvests and the land was gone. The system was not designed to trap people. It was built in a way that made the trap inevitable under conditions that were themselves inevitable."""),
+
+    ("s8_amargi", """Alright. The kings of Babylon understood this. They had to. When unpayable debt accumulated long enough, farmers abandoned their fields, city populations starved, tax revenues collapsed, and armies went unpaid. Debt was not a moral failure. It was a structural maintenance problem. And the solution was called the mishaarum decree.
+
+At the beginning of a new reign, or during a crisis, the king would proclaim the mishaarum. All agricultural debts canceled. Debt slaves freed. Land returned to its original owners. Merchants who had been using debt claims to accumulate peasant land were required to give it back.
+
+The Sumerian word for this freedom was amargi. It means return to the mother. It is the oldest known written word for freedom in any human language.
+
+That's crazy, right? The first freedom humans ever wrote down was not the freedom of speech, not the freedom of religion, not the freedom to vote. It was the freedom from debt. The first thing civilization needed a word for, when it needed a word for freedom, was a financial word."""),
+
+    ("s9_rome", """Rome stopped doing it.
+
+Roman law in the early Republic allowed for debt bondage so severe that the Twelve Tables, the foundation of Roman law, contained a provision allowing a debtor to be divided among multiple creditors if he owed more than one. Whether that provision was literally practiced is debated by historians. But the fact that it was written into the founding legal document of the civilization that we inherited tells you everything about how Rome understood the relationship between creditor and debtor.
+
+Around three hundred twenty six years before Christ, Rome passed a reform called the lex Poetelia Papiria and abolished physical debt slavery for citizens. That looks like progress. But the debt itself remained. The law canceled the bondage and not the obligation. The land concentrated. Small farmers became tenants on land they used to own. Rome grew enormous and eventually collapsed under the weight of a social structure with no pressure valve.
+
+Okay. Western civilization did not inherit the Mesopotamian tradition of the mishaarum. It inherited Roman creditor law. It inherited the Twelve Tables. It inherited a legal framework built on the principle that debt is a contract, contracts are sacred, and sacred contracts do not get canceled."""),
+
+    ("s10_modern", """So here we are.
+
+A credit card at twenty four percent annual interest in an economy growing at three percent per year. Student loan debt compounding across decades for people whose degree did not deliver the income that would allow repayment. Countries in the developing world borrowing in dollars at interest rates they cannot outpace, then opening their economies to foreign capital as a condition of the next loan.
+
+Yeah. The word stockholder comes from the stock, which was the other half of a tally stick. The language of finance still carries the memory of the old objects. But the reset mechanism is gone. The mishaarum is gone. The amargi is gone. The word for freedom that is also a financial word is now a piece of ancient Sumerian that almost nobody knows.
+
+The ancient world did not cancel debts because the kings were generous. They canceled debts because they understood that a system with no relief valve does not survive. The argument for debt cancellation was not moral. It was pragmatic. And the argument was sound enough that it survived for two thousand years across the most sophisticated civilizations the ancient world ever produced.
+
+Then one tradition, the Roman one, decided not to maintain the machine. And we built our world on that decision.
+
+The first word humans ever wrote for freedom meant getting out of debt. What we have inherited is the version of civilization that decided that kind of freedom would no longer be on offer.
+
+If this video made you see money differently, subscribe. There is a lot more history underneath the system that runs your life."""),
+]
+
+# ══════════════════════════════════════════════════════════
+# GENERATION — No need to edit below this line (war-dollar archive below)
+# ══════════════════════════════════════════════════════════
+
+_WAR_DOLLAR_SECTIONS_ARCHIVE = [
     ("s1_hook", """In nineteen seventy one, the United States broke a promise it had kept for twenty seven years. The dollar was no longer backed by gold. And for the next three years, nobody in Washington had any idea what would back it instead.
 
 Hmm. Think about what that means. Every dollar you have ever earned, saved, or spent has been a piece of paper the United States government promised was worth something. Before nineteen seventy one, that promise was backed by gold. Thirty five dollars could be exchanged for one ounce of gold. Any country in the world could walk up to the US Treasury and make that trade. Then one Sunday evening in August, Nixon went on television and said the trade was off.

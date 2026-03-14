@@ -31,16 +31,18 @@ client = ElevenLabs(api_key=API_KEY)
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "war-dollar"  # Folder name under projects/
+PROJECT_NAME = "before-money"  # Folder name under projects/
 
 MUSIC_PROMPT = (
-    "Geopolitical documentary instrumental: slow, weighty low brass and deep bass pulses "
-    "beneath sparse piano lines. The feel of a cold war intelligence briefing room crossed "
-    "with a modern investigative documentary. Opens with quiet tension and deliberate "
-    "restraint, builds through a middle section of mounting dread and mechanical inevitability, "
-    "closes with a cool, unresolved unease. Steady 65 to 75 BPM. No vocals. No triumphant "
-    "resolution. Cinematic and serious — suitable for narration spanning Nixon's Camp David, "
-    "Kissinger in Riyadh, Desert Storm, the Iraq War, and the Strait of Hormuz crisis."
+    "Ancient history documentary instrumental: sparse, contemplative strings beneath a low "
+    "sustained cello line. The emotional texture of a buried truth being slowly uncovered. "
+    "Opens quietly in a minor key, intimate and close, as if in a candlelit room reading "
+    "old documents. Through the middle, a sense of accumulating civilizational weight, "
+    "the slow mathematics of debt and time building beneath the melody. Closes with a "
+    "quiet, unresolved chord that lingers without triumph. Sixty to seventy BPM. No drums "
+    "or percussion. No vocals. Cinematic and restrained, suitable for narration spanning "
+    "ancient Sumer, medieval England, Aztec markets, Babylon, Roman law, and modern "
+    "credit card statements."
 )
 
 MUSIC_LENGTH_MS = 300000  # 5 minutes (300,000 ms)

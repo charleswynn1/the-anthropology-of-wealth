@@ -28,7 +28,7 @@ except ImportError:
 # CONFIGURATION — Edit these for each new video
 # ══════════════════════════════════════════════════════════
 
-PROJECT_NAME = "war-dollar"
+PROJECT_NAME = "before-money"
 FPS = 30
 
 # Section structure: (section_name, [(audio_filename, num_visuals), ...])
@@ -37,26 +37,16 @@ FPS = 30
 # NOTE: counts are placeholders — update after running once to get actual durations,
 # then recompute: ceil(actual_seconds / 10)
 SECTIONS = [
-    ("hook",          [("s1_hook", 12)]),
-    ("bretton",       [("s2_bretton_woods", 11)]),
-    ("nixon_shock",   [("s3_nixon_shock", 13)]),
-    ("dollar_crisis", [("s4_dollar_crisis", 12)]),
-    ("the_deal",      [("s5_the_deal", 14)]),
-    ("mechanics",     [("s6_mechanics", 13)]),
-    ("embargo",       [("s7_embargo", 11)]),
-    ("iran",          [("s7_iran", 5)]),
-    ("carter",        [("s8_carter_doctrine", 14)]),
-    ("gulf_war",      [("s9_gulf_war", 10)]),
-    ("blowback",      [("s9_blowback", 7)]),
-    ("euros",         [("s10_euros", 11)]),
-    ("invasion",      [("s10_invasion", 4)]),
-    ("iraq_war",      [("s11_iraq_war", 14)]),
-    ("libya",         [("s12_libya", 15)]),
-    ("the_cost",      [("s13_the_cost", 14)]),
-    ("profiteering",  [("s14_profiteering", 15)]),
-    ("cracks",        [("s15_cracks", 15)]),
-    ("today",         [("s16_today", 16)]),
-    ("close",         [("s17_close", 16)]),
+    ("hook",    [("s1_hook", 6)]),
+    ("barter",  [("s2_barter", 8)]),
+    ("cowrie",  [("s3_cowrie", 6)]),
+    ("yap",     [("s4_yap", 9)]),
+    ("tally",   [("s5_tally", 10)]),
+    ("cacao",   [("s6_cacao", 6)]),
+    ("machine", [("s7_machine", 9)]),
+    ("amargi",  [("s8_amargi", 7)]),
+    ("rome",    [("s9_rome", 10)]),
+    ("modern",  [("s10_modern", 11)]),
 ]
 
 # ══════════════════════════════════════════════════════════
