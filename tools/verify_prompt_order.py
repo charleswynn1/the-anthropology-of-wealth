@@ -25,55 +25,113 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-WINDOW_SECONDS = 10.0
+
+try:
+    from alignment_utils import (
+        find_sentence_boundaries,
+        group_boundaries_into_windows,
+        get_text_in_range,
+    )
+except ImportError:
+    sys.path.insert(0, str(ROOT / "tools"))
+    from alignment_utils import (
+        find_sentence_boundaries,
+        group_boundaries_into_windows,
+        get_text_in_range,
+    )
+
+FALLBACK_WINDOW_SECONDS = 10.0
 # Flag if the best-matching window scores this many times better than the assigned window.
-# 2.0 means "best match is at least twice as strong" — reduces false positives on
-# short or abstract narrative_context strings.
-WARN_SCORE_RATIO = 2.0
+# 1.5 (tightened from 2.0) — improved scoring reduces false positives, allowing a
+# stricter threshold that catches more genuine mismatches.
+WARN_SCORE_RATIO = 1.5
+# Images scoring below this on their assigned window get a LOW MATCH warning
+# regardless of other windows — may indicate a content gap, not just wrong order.
+LOW_MATCH_THRESHOLD = 0.15
 
 
 # ── Scoring ───────────────────────────────────────────────────────────────────
 
-def word_overlap_score(context: str, window_text: str) -> float:
-    """Fraction of context words that appear in window_text (case-insensitive)."""
-    # Strip punctuation for fairer matching
-    ctx_words  = set(re.sub(r"[^\w\s]", "", context.lower()).split())
-    win_words  = set(re.sub(r"[^\w\s]", "", window_text.lower()).split())
-    # Ignore very common words that appear everywhere and add noise
-    stopwords  = {"the", "a", "an", "and", "or", "but", "in", "on", "at", "to",
-                  "of", "for", "is", "was", "are", "were", "it", "its", "this",
-                  "that", "with", "as", "by", "from", "had", "has", "have",
-                  "they", "their", "he", "his", "she", "her", "we", "our"}
-    ctx_words -= stopwords
-    if not ctx_words:
+STOPWORDS = {
+    "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "of",
+    "for", "is", "was", "are", "were", "it", "its", "this", "that", "with",
+    "as", "by", "from", "had", "has", "have", "they", "their", "he", "his",
+    "she", "her", "we", "our", "not", "be", "been", "being",
+}
+
+
+def _clean_words(text: str) -> list[str]:
+    """Lowercase, strip punctuation, return word list."""
+    return re.sub(r"[^\w\s]", "", text.lower()).split()
+
+
+def _content_words(text: str) -> set[str]:
+    return set(_clean_words(text)) - STOPWORDS
+
+
+def _bigrams(words: list[str]) -> set[tuple[str, str]]:
+    clean = [w for w in words if w not in STOPWORDS]
+    return set(zip(clean[:-1], clean[1:])) if len(clean) >= 2 else set()
+
+
+def _entities(text: str) -> set[str]:
+    """Extract likely proper nouns (capitalized words not at sentence start)."""
+    words = text.split()
+    result = set()
+    for i, word in enumerate(words):
+        clean = re.sub(r"[^\w]", "", word)
+        if clean and clean[0].isupper() and len(clean) > 1 and clean.lower() not in STOPWORDS:
+            # Skip if it's after sentence-ending punctuation (likely sentence start)
+            if i > 0 and not words[i - 1].rstrip()[-1:] in ".?!":
+                result.add(clean.lower())
+    return result
+
+
+def combined_score(context: str, window_text: str) -> float:
+    """Weighted score combining unigram overlap, bigram overlap, and entity match."""
+    ctx_content = _content_words(context)
+    win_content = _content_words(window_text)
+
+    # Unigram overlap
+    if not ctx_content:
         return 0.0
-    return len(ctx_words & win_words) / len(ctx_words)
+    unigram = len(ctx_content & win_content) / len(ctx_content)
+
+    # Bigram overlap
+    ctx_bg = _bigrams(_clean_words(context))
+    win_bg = _bigrams(_clean_words(window_text))
+    bigram = len(ctx_bg & win_bg) / len(ctx_bg) if ctx_bg else 0.0
+
+    # Entity overlap
+    ctx_ent = _entities(context)
+    win_ent = _entities(window_text)
+    entity = len(ctx_ent & win_ent) / len(ctx_ent) if ctx_ent else 0.0
+
+    return 0.5 * unigram + 0.3 * bigram + 0.2 * entity
 
 
 # ── Alignment parsing ─────────────────────────────────────────────────────────
 
-def get_windows(json_path: Path) -> list[str]:
-    """Return 10-second window text strings from an ElevenLabs alignment JSON."""
-    data   = json.loads(json_path.read_text())
-    chars  = data.get("characters", [])
-    starts = data.get("character_start_times_seconds", [])
-    ends   = data.get("character_end_times_seconds", [])
+def get_windows_sentence_aware(json_path: Path, num_visuals: int) -> list[str]:
+    """Return sentence-boundary-aware window text strings."""
+    boundaries = find_sentence_boundaries(json_path)
 
-    if not chars or not ends:
-        return []
+    if boundaries and len(boundaries) >= 3:
+        windows_ranges = group_boundaries_into_windows(boundaries, num_visuals)
+    else:
+        # Fallback to fixed windows
+        data = json.loads(json_path.read_text())
+        ends = data.get("character_end_times_seconds", [])
+        if not ends:
+            return []
+        total = ends[-1]
+        n = int(total / FALLBACK_WINDOW_SECONDS) + (
+            1 if total % FALLBACK_WINDOW_SECONDS else 0
+        )
+        dur = total / max(n, 1)
+        windows_ranges = [(i * dur, min((i + 1) * dur, total)) for i in range(n)]
 
-    total     = ends[-1]
-    n_windows = int(total / WINDOW_SECONDS) + (1 if total % WINDOW_SECONDS else 0)
-
-    windows = []
-    for i in range(n_windows):
-        w_start = i * WINDOW_SECONDS
-        w_end   = min(w_start + WINDOW_SECONDS, total)
-        text    = "".join(
-            c for c, s in zip(chars, starts) if w_start <= s < w_end
-        ).strip()
-        windows.append(text)
-    return windows
+    return [get_text_in_range(json_path, s, e) for s, e in windows_ranges]
 
 
 # ── generate_images.py parsing ────────────────────────────────────────────────
@@ -152,14 +210,16 @@ def main():
 
     print(f"\n{'='*70}")
     print(f"PROMPT ORDER CHECK — {project}")
-    print(f"Each image is scored against its assigned {WINDOW_SECONDS:.0f}s window.")
-    print(f"⚠ = another window scores {WARN_SCORE_RATIO:.0f}× better — likely wrong position.")
+    print(f"Each image is scored against its assigned window (sentence-aware).")
+    print(f"⚠ = another window scores {WARN_SCORE_RATIO:.1f}x better — likely wrong position.")
+    print(f"?  = score below {LOW_MATCH_THRESHOLD:.2f} — possible content gap.")
     print(f"{'='*70}\n")
 
     img_iter      = iter(images)
     any_warnings  = False
     total_checked = 0
     total_warned  = 0
+    total_low     = 0
 
     for sec_name, audio_groups in sections:
         skip = section_filter and section_filter not in sec_name
@@ -182,7 +242,7 @@ def main():
                 print(f"  Run generate_prompt_windows.py after W3a to get window data.\n")
                 continue
 
-            windows = get_windows(json_path)
+            windows = get_windows_sentence_aware(json_path, num_visuals)
             if not windows:
                 print(f"  [{sec_name} / {audio_file}]  — alignment JSON has no data, skipping\n")
                 continue
@@ -201,10 +261,10 @@ def main():
             for i in range(n):
                 code, context  = clip_images[i]
                 assigned_win   = windows[i]
-                assigned_score = word_overlap_score(context, assigned_win)
+                assigned_score = combined_score(context, assigned_win)
 
                 # Score context against every window in this clip
-                all_scores     = [(j, word_overlap_score(context, windows[j]))
+                all_scores     = [(j, combined_score(context, windows[j]))
                                   for j in range(len(windows))]
                 best_j, best_score = max(all_scores, key=lambda x: x[1])
 
@@ -216,18 +276,22 @@ def main():
                     and (assigned_score == 0 or best_score >= assigned_score * WARN_SCORE_RATIO)
                 )
 
+                low_match = assigned_score < LOW_MATCH_THRESHOLD and not out_of_order
+
                 if out_of_order:
                     flag         = (f"⚠  best match window {best_j + 1} "
                                     f"(score {best_score:.2f} vs assigned {assigned_score:.2f})")
                     any_warnings = True
                     section_warned = True
                     total_warned  += 1
+                elif low_match:
+                    flag = f"?  LOW MATCH (score {assigned_score:.2f}) — may not depict this window's content"
+                    any_warnings = True
+                    total_low += 1
                 else:
                     flag = f"✓  score {assigned_score:.2f}"
 
-                w_start = int(i * WINDOW_SECONDS)
-                w_end   = int((i + 1) * WINDOW_SECONDS)
-                print(f"  {i + 1:2}. {code:<8} [{w_start:3}s\u2013{w_end:3}s]  {flag}")
+                print(f"  {i + 1:2}. {code:<8}  {flag}")
                 print(f"       context: {context[:80]}")
                 print(f"       window:  {assigned_win[:80]}")
                 print()
@@ -240,8 +304,16 @@ def main():
 
     print(f"{'='*70}")
     if any_warnings:
-        print(f"WARNINGS — {total_warned} of {total_checked} image(s) appear out of order.")
-        print(f"Fix generate_images.py before running the Gemini API.")
+        parts = []
+        if total_warned:
+            parts.append(f"{total_warned} out-of-order")
+        if total_low:
+            parts.append(f"{total_low} low-match")
+        print(f"WARNINGS — {' + '.join(parts)} of {total_checked} image(s) checked.")
+        if total_warned:
+            print(f"Fix order in generate_images.py before running the Gemini API.")
+        if total_low:
+            print(f"Low-match images may need rewritten prompts — check narrative_context.")
         sys.exit(1)
     else:
         print(f"PASSED — {total_checked} image(s) checked. All match assigned windows.")

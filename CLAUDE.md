@@ -4,11 +4,11 @@ When the user gives a topic, execute the ENTIRE pipeline below from start to fin
 
 **MEMORY RULE: Never use the memory system. If a rule or preference needs to be remembered, add it to this CLAUDE.md file instead.**
 
-**VISUAL SYNC RULE: Images must match the narration playing beneath them. Do NOT assign one audio file per section and distribute images evenly — that guarantees mismatches. Instead, split each section's narration into clips at every visual topic change. Each clip is its own audio file (e.g., `s7_potosi`, `s7_seigniorage`, `s7_loans`) and gets its own image set. Images are only distributed evenly within a single clip, so they stay locked to the right words. A "visual topic change" is any moment where the scene, subject, time period, or concept shifts enough that the current images would look wrong.**
+**VISUAL SYNC RULE: Images must match the narration playing beneath them. Do NOT assign one audio file per section and distribute images evenly — that guarantees mismatches. Instead, split each section's narration into clips at every visual topic change. Each clip is its own audio file (e.g., `s7_potosi`, `s7_seigniorage`, `s7_loans`) and gets its own image set. Within each clip, image durations are computed from sentence boundaries in the ElevenLabs alignment data — not divided evenly. This means each image shows for as long as its narration sentences actually take to speak, not a fixed fraction of the clip. A "visual topic change" is any moment where the scene, subject, time period, or concept shifts enough that the current images would look wrong.**
 
 **IMAGE COUNT RULE: Never guess image counts. Images are generated AFTER audio — W3b does not start until W4 is complete and exact clip durations are known from ElevenLabs. For each clip, images = ceil(actual_seconds / 10). Update `generate_images.py` with the final image counts after running `calculate_timings.py`, then run W3b.**
 
-**PROMPT WINDOW RULE: Before writing any image prompts in W3b, run `python3 tools/generate_prompt_windows.py <project>` and read the output. This prints the exact narration words spoken during each 10-second window for every audio clip. Write each image prompt for its specific window's words — not for the section topic in general. The `narrative_context` field must match or closely paraphrase the words shown for that window. Ordering by theme instead of by timestamp is the single most common cause of visual sync errors.**
+**PROMPT WINDOW RULE: Before writing any image prompts in W3b, run `python3 tools/generate_prompt_windows.py <project>` and read the output. Windows are aligned to sentence boundaries in the ElevenLabs alignment data — each window covers one or more complete sentences, not an arbitrary 10-second slice. Write each image prompt for its specific window's words — not for the section topic in general. The `narrative_context` field must match or closely paraphrase the words shown for that window. Ordering by theme instead of by timestamp is the single most common cause of visual sync errors.**
 
 
 **MEASUREMENTS RULE: All measurements in narration must use US units — Fahrenheit (not Celsius), feet/miles (not meters/kilometers), ounces/pounds (not grams/kilograms). Convert at the time of writing: e.g., "1768°C" → "thirty two hundred and fourteen degrees Fahrenheit", "3.5 grams" → "about an eighth of an ounce".**
@@ -204,7 +204,15 @@ python3 tools/generate_audio.py
 ```
 Outputs MP3s to `projects/<project>/audio/`. Verify all files were created.
 
-**As soon as W3a finishes → immediately start W4.**
+**W3a-verify: Validate audio clip splits** *(runs immediately after W3a)*
+
+```bash
+python3 tools/verify_splits.py <project>
+```
+
+Analyzes each audio clip for potential missed topic splits. Flags adjacent sentences with very low word overlap in clips longer than 20 seconds. Review any flags — if the topic genuinely changes at the flagged point, split the narration in `generate_audio.py` into separate audio files. False positives (same topic, different vocabulary) can be ignored. This check is advisory and does not block the pipeline.
+
+**As soon as W3a + W3a-verify finish → immediately start W4.**
 
 ---
 
@@ -401,6 +409,7 @@ cp tools/generate_audio.py projects/<project>/generate_audio.py
 cp tools/generate_images.py projects/<project>/generate_images.py
 cp tools/generate_music.py projects/<project>/generate_music.py
 cp tools/calculate_timings.py projects/<project>/calculate_timings.py
+cp tools/alignment_utils.py projects/<project>/alignment_utils.py
 ```
 
 ---
@@ -459,6 +468,16 @@ This cannot be automated. The report gives you the raw material — the judgment
 If there are narration moments with no suitable image — sections where the words describe something not depicted by any available image — flag those specifically and generate additional images to cover them. Do not reorder your way out of a content gap. If the narration needs an image that doesn't exist, add it.
 
 **Do not launch the preview until every section has been reviewed and all mismatches fixed.**
+
+**W8b-verify: Post-reorder verification gate** *(runs after W8b reordering)*
+
+```bash
+python3 tools/verify_post_reorder.py <project>
+```
+
+Automated backstop for the W8b review. Scores each image's `narrative_context` against the narration actually playing at its final playback position. Flags images scoring below 0.10 — meaning the image description has almost nothing in common with what the narrator is saying while it's on screen. If any image fails, reorder further in `visuals.tsx` or generate a replacement image before proceeding.
+
+**Do not launch the preview until verify_post_reorder.py passes.**
 
 **W8c: Launch preview**
 ```bash

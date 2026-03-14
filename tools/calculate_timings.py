@@ -12,9 +12,17 @@ Usage:
 import math
 import subprocess
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Import sentence-boundary utilities (handles running from tools/ or projects/<project>/)
+try:
+    from alignment_utils import find_sentence_boundaries, group_boundaries_into_windows
+except ImportError:
+    sys.path.insert(0, str(ROOT / "tools"))
+    from alignment_utils import find_sentence_boundaries, group_boundaries_into_windows
 
 # ══════════════════════════════════════════════════════════
 # CONFIGURATION — Edit these for each new video
@@ -112,11 +120,41 @@ def main():
             seconds = frames / FPS
             print(f"  {audio_file}: {seconds:.2f}s = {frames}f ({num_visuals} visuals)")
 
-            per_visual = frames // num_visuals
-            remainder = frames - (per_visual * num_visuals)
-            timings = [per_visual] * num_visuals
-            for i in range(remainder):
-                timings[i] += 1
+            # ── Sentence-boundary-aware timing ──────────────────────
+            # Uses character-level alignment from ElevenLabs to snap image
+            # durations to actual sentence boundaries instead of dividing
+            # evenly.  Falls back to even distribution when no alignment
+            # JSON is available.
+            alignment_json = AUDIO_DIR / f"{audio_file}.json"
+            boundaries = find_sentence_boundaries(alignment_json)
+
+            if boundaries and len(boundaries) >= 3:
+                # Enough sentence data — use variable durations
+                windows = group_boundaries_into_windows(boundaries, num_visuals)
+                timings = [math.ceil((end - start) * FPS) for start, end in windows]
+
+                # Rounding correction: timings must sum to exactly `frames`
+                diff = sum(timings) - frames
+                if diff > 0:
+                    for _ in range(diff):
+                        idx = timings.index(max(timings))
+                        timings[idx] -= 1
+                elif diff < 0:
+                    for _ in range(-diff):
+                        idx = timings.index(min(timings))
+                        timings[idx] += 1
+
+                mode = "sentence-aware"
+            else:
+                # Fallback: even distribution
+                per_visual = frames // num_visuals
+                remainder = frames - (per_visual * num_visuals)
+                timings = [per_visual] * num_visuals
+                for i in range(remainder):
+                    timings[i] += 1
+                mode = "even (no alignment data)"
+
+            print(f"    mode: {mode}  |  durations: {timings}")
             section_timings.extend(timings)
             section_frames += frames
 
