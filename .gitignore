@@ -26,5 +26,8 @@ public/*
 projects/*
 !projects/.gitkeep
 
-# Src — keep root files, ignore per-project subdirectories
+# Src — keep root files, ignore per-project subdirectories and Root.tsx
+# Root.tsx is machine-local: it only lists currently active compositions and
+# changes every project cycle. Tracking it causes merge conflicts across sessions.
 src/*/
+src/Root.tsx

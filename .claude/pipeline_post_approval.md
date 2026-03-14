@@ -87,6 +87,15 @@ Then remove all remaining project traces from every other subdirectory in the re
 rm -rf src/<project>
 ```
 
+Remove the completed composition from `src/Root.tsx`:
+- Delete the `import { CompositionName } from "./<project>/..."` line
+- Delete the entire `<Composition id="CompositionId" ... />` block for this project
+- If Root.tsx is now empty (no remaining compositions), leave the file with just the shell:
+  ```tsx
+  import { Composition } from "remotion";
+  export const RemotionRoot = () => <></>;
+  ```
+
 Also check and remove any project-named output files:
 ```bash
 rm -f out/<project>.mp4
